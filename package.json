@@ -1,0 +1,29 @@
+{
+  "name": "priveos",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build_node": "rimraf dist/node && babel ./ --out-dir dist/node --ignore ./node_modules,./.babelrc,./package.json,./package-lock.json,./npm-debug.log,webpack.browser.js,test.js,config-test.js --copy-files",
+    "build_browser": "rimraf dist/browser && webpack --config webpack.browser.js",
+    "test": "babel-node test.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@babel/core": "^7.2.0",
+    "@babel/preset-env": "^7.2.0",
+    "axios": "^0.18.0",
+    "bluebird": "^3.5.2",
+    "bytebuffer": "^5.0.1",
+    "eosjs": "^16.0.6",
+    "eosjs-ecc": "^4.0.4",
+    "request": "^2.88.0",
+    "secrets.js-grempe": "^1.1.0",
+    "tweetnacl": "^1.0.0",
+    "tweetnacl-util": "^0.15.0"
+  },
+  "devDependencies": {
+    "babel-plugin-transform-object-rest-spread": "^6.26.0"
+  }
+}

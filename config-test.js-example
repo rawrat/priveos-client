@@ -1,0 +1,7 @@
+export default {
+  dappContract: 'dappcontract',
+  priveosContract: 'priveosrules',
+  httpEndpoint: 'http://localhost:8888',
+  chainId: '7b348df9c7e63f6d74afc42a5d34589c05d7145d3c36880aa260a3055d74f1f0',
+  brokerUrl: 'http://localhost:4000',
+}
