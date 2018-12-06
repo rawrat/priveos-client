@@ -27,9 +27,12 @@ export default class Priveos {
       this.eos = this.config.eos
     }
     
+    
     if(!this.config.priveosContract) {
       this.config.priveosContract = 'priveosrules'
     }
+    
+    this.check_chain_id()
   }
 
   /**
@@ -270,12 +273,22 @@ export default class Priveos {
     if(this.config.ephemeralKeyPublic && this.config.ephemeralKeyPrivate) {
       return {
         public: this.config.ephemeralKeyPublic,
-        private: this.config.ephemeralKeyPrivate
+        private: this.config.ephemeralKeyPrivate,
       }
     } else {
       return {
         public: this.config.publicKey,
         private: this.config.privateKey,
+      }
+    }
+  }
+  
+  async check_chain_id() {
+    const info = await this.eos.getInfo({})
+    if(info.chain_id != this.config.chainId) {
+      console.error("Error: Chain ID does not match with configuration")
+      if(process && process.exit) {
+        process.exit(1)        
       }
     }
   }
