@@ -8,7 +8,7 @@ import axios from 'axios'
 axios.defaults.timeout = 2500;
 import ByteBuffer from 'bytebuffer'
 import eosjs_ecc from 'eosjs-ecc'
-import { get_threshold, hex_to_uint8array } from './helpers.js'
+import { get_threshold, hex_to_uint8array, asset_to_amount } from './helpers.js'
 import Eos from 'eosjs'
 
 export default class Priveos {
@@ -108,35 +108,40 @@ export default class Priveos {
       console.log("this.config.priveosContract: ", this.config.priveosContract)
       console.log("this.config.dappContract: ", this.config.dappContract)
       console.log("owner: ", owner)
+      const fee = await this.get_store_fee(token_symbol)
+      if(asset_to_amount(fee) > 0) {
+        actions = actions.concat([
+          {
+            account: this.config.priveosContract,
+            name: 'prepare',
+            authorization: [{
+              actor: owner,
+              permission: 'active',
+            }],
+            data: {
+              user: owner,
+              currency: token_symbol,
+            }
+          },
+          {
+            account: "eosio.token",
+            name: 'transfer',
+            authorization: [{
+              actor: owner,
+              permission: 'active',
+            }],
+            data: {
+              from: owner,
+              to: this.config.priveosContract,
+              quantity: fee,
+              memo: "PrivEOS fee",
+            }
+          }
+        ])
+      }
       return this.eos.transaction(
         {
           actions: actions.concat([
-            {
-              account: this.config.priveosContract,
-              name: 'prepare',
-              authorization: [{
-                actor: owner,
-                permission: 'active',
-              }],
-              data: {
-                user: owner,
-                currency: token_symbol,
-              }
-            },
-            {
-              account: "eosio.token",
-              name: 'transfer',
-              authorization: [{
-                actor: owner,
-                permission: 'active',
-              }],
-              data: {
-                from: owner,
-                to: this.config.priveosContract,
-                quantity: await this.get_store_fee(token_symbol),
-                memo: "PrivEOS fee",
-              }
-            },
             {
               account: this.config.priveosContract,
               name: 'store',
@@ -160,35 +165,40 @@ export default class Priveos {
   
   async accessgrant(user, file, token_symbol, actions = []) {
     console.log(`accessgrant user: ${user}`)
+    const fee = await this.get_read_fee(token_symbol)
+    if(asset_to_amount(fee) > 0) {
+      actions = actions.concat([
+        {
+          account: this.config.priveosContract,
+          name: 'prepare',
+          authorization: [{
+            actor: user,
+            permission: 'active',
+          }],
+          data: {
+            user: user,
+            currency: token_symbol,
+          }
+        },
+        {
+          account: "eosio.token",
+          name: 'transfer',
+          authorization: [{
+            actor: user,
+            permission: 'active',
+          }],
+          data: {
+            from: user,
+            to: this.config.priveosContract,
+            quantity: fee,
+            memo: "PrivEOS fee",
+          }
+        }
+      ])
+    }      
     return this.eos.transaction({
       actions: actions.concat(
         [
-          {
-            account: this.config.priveosContract,
-            name: 'prepare',
-            authorization: [{
-              actor: user,
-              permission: 'active',
-            }],
-            data: {
-              user: user,
-              currency: token_symbol,
-            }
-          },
-          {
-            account: "eosio.token",
-            name: 'transfer',
-            authorization: [{
-              actor: user,
-              permission: 'active',
-            }],
-            data: {
-              from: user,
-              to: this.config.priveosContract,
-              quantity: await this.get_read_fee(token_symbol),
-              memo: "PrivEOS fee",
-            }
-          },
           {
             account: this.config.priveosContract,
             name: 'accessgrant',

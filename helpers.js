@@ -12,3 +12,7 @@ export function hex_to_uint8array(hex_string) {
 export function uint8array_to_hex(array) {
   return Buffer.from(array).toString('hex')
 }
+
+export function asset_to_amount(asset) {
+  return parseFloat(asset)
+}
