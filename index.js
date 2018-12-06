@@ -69,98 +69,94 @@ export default class Priveos {
     console.log("Nonce: ", nonce)
     console.log("shared_secret: ", shared_secret)
     
-    return this.get_active_nodes()
-    .then((nodes) => {
-      console.log("\r\nNodes: ", nodes)
+    const nodes = await this.get_active_nodes()
+    console.log("\r\nNodes: ", nodes)
 
-      const number_of_nodes = nodes.length
-      const threshold = get_threshold(number_of_nodes)
-      const shares = secrets.share(shared_secret, number_of_nodes, threshold)
+    const number_of_nodes = nodes.length
+    const threshold = get_threshold(number_of_nodes)
+    const shares = secrets.share(shared_secret, number_of_nodes, threshold)
 
-      console.log("Shares: ", shares)
+    console.log("Shares: ", shares)
 
-      const keys = this.get_config_keys()
+    const keys = this.get_config_keys()
 
-      var data = nodes.map(node => {
-        const public_key = node.node_key
+    const payload = nodes.map(node => {
+      const public_key = node.node_key
 
-        console.log(`\r\nNode ${node.owner}`)
+      console.log(`\r\nNode ${node.owner}`)
 
-        const share = eosjs_ecc.Aes.encrypt(keys.private , public_key, shares.pop())
-        
-        return {
-          node: node.owner, 
-          message: share.message.toString('hex'),
-          nonce: String(share.nonce),
-          checksum: share.checksum,
-          public_key: public_key,
-        }
-      })
+      const share = eosjs_ecc.Aes.encrypt(keys.private , public_key, shares.pop())
+      
       return {
-        data: data,
-        threshold: threshold,
-        public_key: keys.public,
+        node: node.owner, 
+        message: share.message.toString('hex'),
+        nonce: String(share.nonce),
+        checksum: share.checksum,
+        public_key: public_key,
       }
     })
-    .then(async (data) => {
-      console.log("\r\nBundling... ")
-      console.log("Constructed this (data): ", JSON.stringify(data))
-      console.log("this.config.priveosContract: ", this.config.priveosContract)
-      console.log("this.config.dappContract: ", this.config.dappContract)
-      console.log("owner: ", owner)
-      const fee = await this.get_store_fee(token_symbol)
-      if(asset_to_amount(fee) > 0) {
-        actions = actions.concat([
+    const data = {
+      data: payload,
+      threshold: threshold,
+      public_key: keys.public,
+    }
+    console.log("\r\nBundling... ")
+    console.log("Constructed this (data): ", JSON.stringify(data))
+    console.log("this.config.priveosContract: ", this.config.priveosContract)
+    console.log("this.config.dappContract: ", this.config.dappContract)
+    console.log("owner: ", owner)
+    const fee = await this.get_store_fee(token_symbol)
+    if(asset_to_amount(fee) > 0) {
+      actions = actions.concat([
+        {
+          account: this.config.priveosContract,
+          name: 'prepare',
+          authorization: [{
+            actor: owner,
+            permission: 'active',
+          }],
+          data: {
+            user: owner,
+            currency: token_symbol,
+          }
+        },
+        {
+          account: "eosio.token",
+          name: 'transfer',
+          authorization: [{
+            actor: owner,
+            permission: 'active',
+          }],
+          data: {
+            from: owner,
+            to: this.config.priveosContract,
+            quantity: fee,
+            memo: "PrivEOS fee",
+          }
+        }
+      ])
+    }
+    return this.eos.transaction(
+      {
+        actions: actions.concat([
           {
             account: this.config.priveosContract,
-            name: 'prepare',
+            name: 'store',
             authorization: [{
               actor: owner,
               permission: 'active',
             }],
             data: {
-              user: owner,
-              currency: token_symbol,
-            }
-          },
-          {
-            account: "eosio.token",
-            name: 'transfer',
-            authorization: [{
-              actor: owner,
-              permission: 'active',
-            }],
-            data: {
-              from: owner,
-              to: this.config.priveosContract,
-              quantity: fee,
-              memo: "PrivEOS fee",
+              owner: owner,
+              contract: this.config.dappContract,
+              file: file,
+              data: JSON.stringify(data),
+              token: token_symbol,
             }
           }
         ])
       }
-      return this.eos.transaction(
-        {
-          actions: actions.concat([
-            {
-              account: this.config.priveosContract,
-              name: 'store',
-              authorization: [{
-                actor: owner,
-                permission: 'active',
-              }],
-              data: {
-                owner: owner,
-                contract: this.config.dappContract,
-                file: file,
-                data: JSON.stringify(data),
-                token: token_symbol,
-              }
-            }
-          ])
-        }
-      )
-    })
+    )
   } 
   
   async accessgrant(user, file, token_symbol, actions = []) {
@@ -219,66 +215,52 @@ export default class Priveos {
     })
   }
   
-  get_read_fee(token) {
+  async get_read_fee(token) {
     if(token.indexOf(",") != -1) {
       token = token.split(",")[1]
     }
-    return this.eos.getTableRows({json:true, scope: 'priveosrules', code: 'priveosrules',  table: 'readprice', limit:1, lower_bound: token})
-    .then((res) => {
-      console.log('get_priveos_fee: ', res.rows[0].money)
-      return res.rows[0].money
-    })
+    const res = await this.eos.getTableRows({json:true, scope: 'priveosrules', code: 'priveosrules',  table: 'readprice', limit:1, lower_bound: token})
+    console.log('get_priveos_fee: ', res.rows[0].money)
+    return res.rows[0].money
   }
   
-  get_store_fee(token) {
+  async get_store_fee(token) {
     if(token.indexOf(",") != -1) {
       token = token.split(",")[1]
     }
-    return this.eos.getTableRows({json:true, scope: 'priveosrules', code: 'priveosrules',  table: 'storeprice', limit:1, lower_bound: token})
-    .then((res) => {
-      console.log('get_priveos_fee: ', res.rows[0].money)
-      return res.rows[0].money
-    })
+    const res = await this.eos.getTableRows({json:true, scope: 'priveosrules', code: 'priveosrules',  table: 'storeprice', limit:1, lower_bound: token})
+    console.log('get_priveos_fee: ', res.rows[0].money)
+    return res.rows[0].money
   }
 
-  read(owner, file) {
-    return axios.post(this.config.brokerUrl + '/read/', {
+  async read(owner, file) {
+    const response = await axios.post(this.config.brokerUrl + '/read/', {
       file: file,
       requester: owner,
       dappcontract: this.config.dappContract,
-    }).then(response => {
-      const shares = response.data
-      console.log("Shares: ", shares)
-      
-      const read_key = this.get_config_keys()
-      
-      const decrypted_shares = shares.map((data) => {
-        return String(eosjs_ecc.Aes.decrypt(read_key.private, data.public_key, data.nonce, ByteBuffer.fromHex(data.message).toBinary(), data.checksum))
-      })
-      return decrypted_shares
     })
-    .then((decrypted_shares) => {
-      return secrets.combine(decrypted_shares)
+    const shares = response.data
+    console.log("Shares: ", shares)
+    
+    const read_key = this.get_config_keys()
+    
+    const decrypted_shares = shares.map((data) => {
+      return String(eosjs_ecc.Aes.decrypt(read_key.private, data.public_key, data.nonce, ByteBuffer.fromHex(data.message).toBinary(), data.checksum))
     })
-    .then((combined) => {
-      console.log("Combined: ", combined)
-      const combined_hex_key = combined.slice(0, nacl.secretbox.keyLength*2)
-      const combined_hex_nonce = combined.slice(nacl.secretbox.keyLength*2)
-      console.log("Hex key: ", combined_hex_key)
-      console.log("Nonce: ", combined_hex_nonce)
-      const key_buffer = hex_to_uint8array(combined_hex_key)
-      const nonce_buffer = hex_to_uint8array(combined_hex_nonce)
-      return [key_buffer, nonce_buffer]
-    })
+    const combined = secrets.combine(decrypted_shares)
+    console.log("Combined: ", combined)
+    const combined_hex_key = combined.slice(0, nacl.secretbox.keyLength*2)
+    const combined_hex_nonce = combined.slice(nacl.secretbox.keyLength*2)
+    console.log("Hex key: ", combined_hex_key)
+    console.log("Nonce: ", combined_hex_nonce)
+    const key_buffer = hex_to_uint8array(combined_hex_key)
+    const nonce_buffer = hex_to_uint8array(combined_hex_nonce)
+    return [key_buffer, nonce_buffer]
   }
   
-  get_active_nodes(){
-    return this.eos.getTableRows({json:true, scope: this.config.priveosContract, code: this.config.priveosContract,  table: 'nodes', limit:100})
-    .then((res) => {
-      return res.rows.filter((x) => {
-        return x.is_active
-      })
-    })
+  async get_active_nodes(){
+    const res = await this.eos.getTableRows({json:true, scope: this.config.priveosContract, code: this.config.priveosContract,  table: 'nodes', limit:100})
+    return res.rows.filter(x => x.is_active)
   }
   
   /**
