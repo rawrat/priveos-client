@@ -155,6 +155,7 @@ export default class Priveos {
               file: file,
               data: JSON.stringify(data),
               token: token_symbol,
+              auditable: 0,
             }
           }
         ])
