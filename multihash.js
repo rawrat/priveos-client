@@ -1,4 +1,4 @@
-import {default as Unixfs} from 'ipfs-unixfs'
+import Unixfs from 'ipfs-unixfs'
 import {DAGNode, util} from 'ipld-dag-pb'
 
 export default function getMultiHash(buffer) {
