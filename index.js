@@ -11,6 +11,7 @@ import eosjs_ecc from 'eosjs-ecc'
 import { get_threshold, hex_to_uint8array, asset_to_amount } from './helpers.js'
 import Eos from 'eosjs'
 import ipfsClient from 'ipfs-http-client'
+import getMultiHash from './multihash'
 
 export default class Priveos {
   constructor(config) {
@@ -142,12 +143,10 @@ export default class Priveos {
     }
     
     
-    const ipfs = ipfsClient('localhost', '5001', { protocol: 'http' })
-    const buffer = ipfs.types.Buffer.from(JSON.stringify(data))
-    const results = await ipfs.add(buffer)
-    const hash = results[0].hash
-    
-    return this.eos.transaction(
+    const buffer = Buffer.from(JSON.stringify(data))
+    const hash = await getMultiHash(buffer)
+    console.log("hash: ", hash)
+    await this.eos.transaction(
       {
         actions: actions.concat([
           {
@@ -169,6 +168,9 @@ export default class Priveos {
         ])
       }
     )
+    
+    // TODO: Send buffer to broker -> priveos_kms
+    
   } 
   
   async accessgrant(user, file, token_symbol, actions = []) {
