@@ -10,6 +10,7 @@ import ByteBuffer from 'bytebuffer'
 import eosjs_ecc from 'eosjs-ecc'
 import { get_threshold, hex_to_uint8array, asset_to_amount } from './helpers.js'
 import Eos from 'eosjs'
+import ipfsClient from 'ipfs-http-client'
 
 export default class Priveos {
   constructor(config) {
@@ -139,6 +140,13 @@ export default class Priveos {
         }
       ])
     }
+    
+    
+    const ipfs = ipfsClient('localhost', '5001', { protocol: 'http' })
+    const buffer = ipfs.types.Buffer.from(JSON.stringify(data))
+    const results = await ipfs.add(buffer)
+    const hash = results[0].hash
+    
     return this.eos.transaction(
       {
         actions: actions.concat([
@@ -153,7 +161,7 @@ export default class Priveos {
               owner: owner,
               contract: this.config.dappContract,
               file: file,
-              data: JSON.stringify(data),
+              data: hash,
               token: token_symbol,
               auditable: 0,
             }
