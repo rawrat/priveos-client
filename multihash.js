@@ -1,6 +1,5 @@
 import {default as Unixfs} from 'ipfs-unixfs'
 import {DAGNode, util} from 'ipld-dag-pb'
-import multihash from 'multihashes'
 
 export default function getMultiHash(buffer) {
     const unixFs = new Unixfs("file", buffer)
@@ -13,7 +12,7 @@ export default function getMultiHash(buffer) {
                 if(err) {
                   reject(err)
                 } else {
-                  resolve(multihash.toB58String(cid.multihash)) 
+                  resolve(cid.toBaseEncodedString()) 
                 }
               })
             }
