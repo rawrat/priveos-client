@@ -1,5 +1,5 @@
 import Unixfs from 'ipfs-unixfs'
-import {DAGNode, util} from 'ipld-dag-pb'
+import { DAGNode, util } from 'ipld-dag-pb'
 
 export default function getMultiHash(buffer) {
     const unixFs = new Unixfs("file", buffer)
