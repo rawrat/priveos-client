@@ -145,7 +145,7 @@ export default class Priveos {
     var buffer = Buffer.from(JSON.stringify(data))
     const hash = await getMultiHash(buffer)
     
-    const response = await axios.post(this.config.brokerUrl + '/store/', {
+    const response = await axios.post(this.config.brokerUrl + '/broker/store/', {
       file: file,
       data: JSON.stringify(data),
       owner: owner,
@@ -255,7 +255,7 @@ export default class Priveos {
   }
 
   async read(owner, file) {
-    const response = await axios.post(this.config.brokerUrl + '/read/', {
+    const response = await axios.post(this.config.brokerUrl + '/broker/read/', {
       file: file,
       requester: owner,
       dappcontract: this.config.dappContract,
