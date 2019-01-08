@@ -303,7 +303,7 @@ export default class Priveos {
   async check_chain_id() {
     const info = await this.eos.getInfo({})
     if(info.chain_id != this.config.chainId) {
-      console.error("Error: Chain ID does not match with configuration")
+      console.error(`Error: Chain ID is configured to be "${this.config.chainId}" but is "${info.chain_id}"`)
       if(process && process.exit) {
         process.exit(1)        
       }
