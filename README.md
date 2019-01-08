@@ -4,8 +4,11 @@ This is the javascript client library that makes it easy to integrate privEOS in
 
 ## Installation and Usage
 
+    npm install babel-cli -g
+
     git clone https://github.com/rawrat/priveos-client
     cd priveos-client
+    npm install
     npm link
     
 And in your application:
@@ -13,3 +16,8 @@ And in your application:
     npm link priveos
     
 More documentation and examples coming…
+
+## Testing
+### Test Jungle
+    cp config-test.js.jungle config-test.js
+    babel-node test.js
