@@ -176,7 +176,6 @@ export default class Priveos {
       }
     )
     
-    // TODO: Send buffer to broker -> priveos_kms
     return result
   } 
   
