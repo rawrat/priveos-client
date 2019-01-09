@@ -19,6 +19,9 @@ export default class Priveos {
     if (config.privateKey && !config.publicKey) throw new Error('When passing config.privateKey the related config.publicKey must be present too')
     if (config.ephemeralKeyPrivate && !config.ephemeralKeyPublic) throw new Error('When passing config.ephemeralKeyPrivate the related config.ephemeralKeyPublic must be present too')
     if (!config.dappContract) throw new Error('Instantiating Priveos requires a dappContract set')
+    if (!config.chainId) throw new Error('No chainId given')
+    if (!config.brokerUrl) throw new Error('No brokerUrl given')
+    if (!config.httpEndpoint) throw new Error('No httpEndpoint give')
 
     this.config = config
     
