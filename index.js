@@ -11,6 +11,7 @@ import eosjs_ecc from 'eosjs-ecc'
 import { get_threshold, hex_to_uint8array, asset_to_amount } from './helpers.js'
 import Eos from 'eosjs'
 import getMultiHash from './multihash'
+const log = require('loglevel')
 
 export default class Priveos {
   constructor(config) {
@@ -24,6 +25,7 @@ export default class Priveos {
     if (!config.httpEndpoint) throw new Error('No httpEndpoint give')
 
     this.config = config
+    log.setDefaultLevel(config.logLevel || 'info')
     
     if (this.config.privateKey) {
       this.eos = Eos({httpEndpoint:this.config.httpEndpoint, chainId: this.config.chainId, keyProvider: [this.config.privateKey]})
@@ -45,8 +47,8 @@ export default class Priveos {
   get_encryption_keys() {
     const secret_bytes = nacl.randomBytes(nacl.secretbox.keyLength)
     const nonce_bytes = nacl.randomBytes(nacl.secretbox.nonceLength)
-    console.log("Secret (bytes): ", JSON.stringify(secret_bytes))
-    console.log("Nonce (bytes): ", JSON.stringify(nonce_bytes))
+    log.debug("Secret (bytes): ", JSON.stringify(secret_bytes))
+    log.debug("Nonce (bytes): ", JSON.stringify(nonce_bytes))
     return {
       secret_bytes,
       nonce_bytes
@@ -62,7 +64,7 @@ export default class Priveos {
    * @param {array} actions Additional actions to trigger alongside store transaction (usability)
    */
   async store(owner, file, secret_bytes, nonce_bytes, token_symbol, actions = []) {
-    console.log(`\r\n###\r\npriveos.store(${owner}, ${file})`)
+    log.debug(`\r\n###\r\npriveos.store(${owner}, ${file})`)
     
     assert.ok(owner && file, "Owner and file must be supplied")
     assert.ok(secret_bytes && nonce_bytes, "secret_bytes and nonce_bytes must be supplied (run priveos.get_encryption_keys() before)")
@@ -71,26 +73,27 @@ export default class Priveos {
     const nonce = Buffer.from(nonce_bytes).toString('hex')
     const shared_secret = secret + nonce
 
-    console.log("shared_secret: ", shared_secret)
-    console.log("Secret: ", secret)
-    console.log("Nonce: ", nonce)
-    console.log("shared_secret: ", shared_secret)
+    log.debug("shared_secret: ", shared_secret)
+    log.debug("Secret: ", secret)
+    log.debug("Nonce: ", nonce)
+    log.debug("shared_secret: ", shared_secret)
     
     const nodes = await this.get_active_nodes()
-    console.log("\r\nNodes: ", nodes)
+    log.debug("\r\nNodes: ", nodes)
 
     const number_of_nodes = nodes.length
     const threshold = get_threshold(number_of_nodes)
+    log.debug(`Nodes: ${number_of_nodes} Threshold: ${threshold}`)
     const shares = secrets.share(shared_secret, number_of_nodes, threshold)
 
-    console.log("Shares: ", shares)
+    log.debug("Shares: ", shares)
 
     const keys = this.get_config_keys()
 
     const payload = nodes.map(node => {
       const public_key = node.node_key
 
-      console.log(`\r\nNode ${node.owner}`)
+      log.debug(`\r\nNode ${node.owner}`)
 
       const share = eosjs_ecc.Aes.encrypt(keys.private , public_key, shares.pop())
       
@@ -107,11 +110,11 @@ export default class Priveos {
       threshold: threshold,
       public_key: keys.public,
     }
-    console.log("\r\nBundling... ")
-    console.log("Constructed this (data): ", JSON.stringify(data))
-    console.log("this.config.priveosContract: ", this.config.priveosContract)
-    console.log("this.config.dappContract: ", this.config.dappContract)
-    console.log("owner: ", owner)
+    log.debug("\r\nBundling... ")
+    log.debug("Constructed this (data): ", JSON.stringify(data))
+    log.debug("this.config.priveosContract: ", this.config.priveosContract)
+    log.debug("this.config.dappContract: ", this.config.dappContract)
+    log.debug("owner: ", owner)
     const fee = await this.get_store_fee(token_symbol)
     if(asset_to_amount(fee) > 0) {
       actions = actions.concat([
@@ -147,7 +150,7 @@ export default class Priveos {
     
     var buffer = Buffer.from(JSON.stringify(data))
     const hash = await getMultiHash(buffer)
-    
+    log.debug("Calling /broker/store/ for hash ", hash)
     const response = await axios.post(this.config.brokerUrl + '/broker/store/', {
       file: file,
       data: JSON.stringify(data),
@@ -183,7 +186,7 @@ export default class Priveos {
   } 
   
   async accessgrant(user, file, token_symbol, actions = []) {
-    console.log(`accessgrant user: ${user}`)
+    log.debug(`accessgrant user: ${user}`)
     const fee = await this.get_read_fee(token_symbol)
     if(asset_to_amount(fee) > 0) {
       actions = actions.concat([
@@ -243,7 +246,7 @@ export default class Priveos {
       token = token.split(",")[1]
     }
     const res = await this.eos.getTableRows({json:true, scope: 'priveosrules', code: 'priveosrules',  table: 'readprice', limit:1, lower_bound: token})
-    console.log('get_priveos_fee: ', res.rows[0].money)
+    log.debug('get_priveos_fee: ', res.rows[0].money)
     return res.rows[0].money
   }
   
@@ -252,7 +255,7 @@ export default class Priveos {
       token = token.split(",")[1]
     }
     const res = await this.eos.getTableRows({json:true, scope: 'priveosrules', code: 'priveosrules',  table: 'storeprice', limit:1, lower_bound: token})
-    console.log('get_priveos_fee: ', res.rows[0].money)
+    log.debug('get_priveos_fee: ', res.rows[0].money)
     return res.rows[0].money
   }
 
@@ -263,7 +266,7 @@ export default class Priveos {
       dappcontract: this.config.dappContract,
     })
     const shares = response.data
-    console.log("Shares: ", shares)
+    log.debug("Shares: ", shares)
     
     const read_key = this.get_config_keys()
     
@@ -271,11 +274,11 @@ export default class Priveos {
       return String(eosjs_ecc.Aes.decrypt(read_key.private, data.public_key, data.nonce, ByteBuffer.fromHex(data.message).toBinary(), data.checksum))
     })
     const combined = secrets.combine(decrypted_shares)
-    console.log("Combined: ", combined)
+    log.debug("Combined: ", combined)
     const combined_hex_key = combined.slice(0, nacl.secretbox.keyLength*2)
     const combined_hex_nonce = combined.slice(nacl.secretbox.keyLength*2)
-    console.log("Hex key: ", combined_hex_key)
-    console.log("Nonce: ", combined_hex_nonce)
+    log.debug("Hex key: ", combined_hex_key)
+    log.debug("Nonce: ", combined_hex_nonce)
     const key_buffer = hex_to_uint8array(combined_hex_key)
     const nonce_buffer = hex_to_uint8array(combined_hex_nonce)
     return [key_buffer, nonce_buffer]

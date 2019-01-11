@@ -19,6 +19,7 @@
     "eosjs-ecc": "^4.0.4",
     "ipfs-unixfs": "^0.1.16",
     "ipld-dag-pb": "^0.15.1",
+    "loglevel": "^1.6.1",
     "secrets.js-grempe": "^1.1.0",
     "tweetnacl": "^1.0.0",
     "tweetnacl-util": "^0.15.0",
