@@ -24,9 +24,11 @@ export default class Priveos {
     
     this.config = config
     
-    this.config.timeout_seconds = config.timeout_seconds || 10
+    if(typeof this.config.timeout_seconds == 'undefined') {
+      this.config.timeout_seconds = 10
+    }
     
-    log.setDefaultLevel(config.logLevel || 'info')
+    log.setDefaultLevel(this.config.logLevel || 'info')
     
     if (this.config.privateKey) {
       this.eos = Eos({httpEndpoint:this.config.httpEndpoint, chainId: this.config.chainId, keyProvider: [this.config.privateKey]})
