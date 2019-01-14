@@ -5,7 +5,6 @@ import util from 'tweetnacl-util'
 nacl.util = util
 import assert from 'assert'
 import axios from 'axios'
-axios.defaults.timeout = 2500;
 import ByteBuffer from 'bytebuffer'
 import eosjs_ecc from 'eosjs-ecc'
 import { get_threshold, hex_to_uint8array, asset_to_amount } from './helpers.js'
