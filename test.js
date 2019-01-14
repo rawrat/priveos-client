@@ -72,7 +72,7 @@ async function test() {
   console.log("\r\nTime elapsed - accessgrant transaction", (d-c))
   
   console.log("Calling riveos_bob.read(bob, file)")
-  const [recovered_secret_bytes, recovered_nonce_bytes] = await priveos_bob.read(bob, file)
+  const [recovered_nonce_bytes, recovered_secret_bytes] = await priveos_bob.read(bob, file)
   console.log("priveos_bob.read(bob, file) succeeded")
   const e = new Date()
   console.log("d-e", (e-d))

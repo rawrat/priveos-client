@@ -284,9 +284,9 @@ export default class Priveos {
     const combined_hex_nonce = combined.slice(nacl.secretbox.keyLength*2)
     log.debug("Hex key: ", combined_hex_key)
     log.debug("Nonce: ", combined_hex_nonce)
-    const key_buffer = Priveos.hex_to_uint8array(combined_hex_key)
-    const nonce_buffer = Priveos.hex_to_uint8array(combined_hex_nonce)
-    return [key_buffer, nonce_buffer]
+    const key = Priveos.hex_to_uint8array(combined_hex_key)
+    const nonce = Priveos.hex_to_uint8array(combined_hex_nonce)
+    return [nonce, key]
   }
   
   async get_active_nodes(){
