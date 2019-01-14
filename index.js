@@ -24,7 +24,7 @@ export default class Priveos {
     
     this.config = config
     
-    this.config.timeout_seconds = config.timeout_seconds || 0
+    this.config.timeout_seconds = config.timeout_seconds || 10
     
     log.setDefaultLevel(config.logLevel || 'info')
     
