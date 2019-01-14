@@ -9,7 +9,6 @@ try {
   console.log("config-test.js not found. Please copy config-test.js-example to config-test.js and modify to your needs")
   process.exit(1)
 }
-import { uint8array_to_hex } from './helpers'
 import uuidv4 from 'uuid/v4'
 import eosjs_ecc from 'eosjs-ecc'
 const alice = 'priveosalice'
@@ -81,10 +80,10 @@ async function test() {
   console.log("a-a", (e-a))
   // console.log('Y: ', y)
 
-  console.log("Original key: ", uint8array_to_hex(secret_bytes))
-  console.log("Original nonce: ", uint8array_to_hex(nonce_bytes))
-  console.log("Reconstructed key: ", uint8array_to_hex(recovered_secret_bytes))
-  console.log("Reconstructed nonce: ", uint8array_to_hex(recovered_nonce_bytes))
+  console.log("Original key: ", Priveos.uint8array_to_hex(secret_bytes))
+  console.log("Original nonce: ", Priveos.uint8array_to_hex(nonce_bytes))
+  console.log("Reconstructed key: ", Priveos.uint8array_to_hex(recovered_secret_bytes))
+  console.log("Reconstructed nonce: ", Priveos.uint8array_to_hex(recovered_nonce_bytes))
   
   assert.deepStrictEqual(secret_bytes, recovered_secret_bytes)
   assert.deepStrictEqual(nonce_bytes, recovered_nonce_bytes)
