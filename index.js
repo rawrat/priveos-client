@@ -21,8 +21,11 @@ export default class Priveos {
     if (!config.chainId) throw new Error('No chainId given')
     if (!config.brokerUrl) throw new Error('No brokerUrl given')
     if (!config.httpEndpoint) throw new Error('No httpEndpoint give')
-
+    
     this.config = config
+    
+    this.config.timeout_seconds = config.timeout_seconds || 0
+    
     log.setDefaultLevel(config.logLevel || 'info')
     
     if (this.config.privateKey) {
@@ -154,6 +157,7 @@ export default class Priveos {
       data: JSON.stringify(data),
       owner: owner,
       dappcontract: this.config.dappContract,
+      timeout_seconds: this.config.timeout_seconds,
     })
     
   
@@ -262,6 +266,7 @@ export default class Priveos {
       file: file,
       requester: owner,
       dappcontract: this.config.dappContract,
+      timeout_seconds: this.config.timeout_seconds,
     })
     const shares = response.data
     log.debug("Shares: ", shares)

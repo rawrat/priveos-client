@@ -68,7 +68,6 @@ async function test() {
   console.log(`Push accessgrant action for user ${bob}, contract ${priveos_bob.config.dappContract}, file ${file} and public key ${priveos_bob.config.ephemeralKeyPublic}`)
   await priveos_bob.accessgrant(bob, file, "4,EOS")
   console.log(`\r\nWaiting for transaction to finish`)  
-  await Promise.delay(5000) // delay to make sure transaction can propagate
   const d = new Date()
   console.log("\r\nTime elapsed - accessgrant transaction", (d-c))
   
