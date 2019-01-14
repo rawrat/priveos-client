@@ -7,7 +7,6 @@ import assert from 'assert'
 import axios from 'axios'
 import ByteBuffer from 'bytebuffer'
 import eosjs_ecc from 'eosjs-ecc'
-import { get_threshold, hex_to_uint8array, asset_to_amount } from './helpers.js'
 import Eos from 'eosjs'
 import getMultiHash from './multihash'
 const log = require('loglevel')
@@ -81,7 +80,7 @@ export default class Priveos {
     log.debug("\r\nNodes: ", nodes)
 
     const number_of_nodes = nodes.length
-    const threshold = get_threshold(number_of_nodes)
+    const threshold = Priveos.get_threshold(number_of_nodes)
     log.debug(`Nodes: ${number_of_nodes} Threshold: ${threshold}`)
     const shares = secrets.share(shared_secret, number_of_nodes, threshold)
 
@@ -115,7 +114,7 @@ export default class Priveos {
     log.debug("this.config.dappContract: ", this.config.dappContract)
     log.debug("owner: ", owner)
     const fee = await this.get_store_fee(token_symbol)
-    if(asset_to_amount(fee) > 0) {
+    if(Priveos.asset_to_amount(fee) > 0) {
       actions = actions.concat([
         {
           account: this.config.priveosContract,
@@ -187,7 +186,7 @@ export default class Priveos {
   async accessgrant(user, file, token_symbol, actions = []) {
     log.debug(`accessgrant user: ${user}`)
     const fee = await this.get_read_fee(token_symbol)
-    if(asset_to_amount(fee) > 0) {
+    if(Priveos.asset_to_amount(fee) > 0) {
       actions = actions.concat([
         {
           account: this.config.priveosContract,
@@ -278,8 +277,8 @@ export default class Priveos {
     const combined_hex_nonce = combined.slice(nacl.secretbox.keyLength*2)
     log.debug("Hex key: ", combined_hex_key)
     log.debug("Nonce: ", combined_hex_nonce)
-    const key_buffer = hex_to_uint8array(combined_hex_key)
-    const nonce_buffer = hex_to_uint8array(combined_hex_nonce)
+    const key_buffer = Priveos.hex_to_uint8array(combined_hex_key)
+    const nonce_buffer = Priveos.hex_to_uint8array(combined_hex_nonce)
     return [key_buffer, nonce_buffer]
   }
   
@@ -315,3 +314,22 @@ export default class Priveos {
     }
   }
 }
+
+// Add some static functions
+
+Priveos.get_threshold = (N) => {
+  return Math.floor(N/2) + 1
+}
+
+Priveos.hex_to_uint8array = (hex_string) => {
+  return new Uint8Array(ByteBuffer.fromHex(hex_string).toArrayBuffer())
+}
+
+Priveos.uint8array_to_hex = (array) => {
+  return Buffer.from(array).toString('hex')
+}
+
+Priveos.asset_to_amount = (asset) => {
+  return parseFloat(asset)
+}
+
