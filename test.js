@@ -71,6 +71,7 @@ async function test() {
   const d = new Date()
   console.log("\r\nTime elapsed - accessgrant transaction", (d-c))
   
+  // the following line can be remove once all nodes have upgraded to at least v0.1.2
   await Promise.delay(5000) // delay to make sure transaction can propagate
 
   console.log("Calling riveos_bob.read(bob, file)")
