@@ -71,6 +71,8 @@ async function test() {
   const d = new Date()
   console.log("\r\nTime elapsed - accessgrant transaction", (d-c))
   
+  await Promise.delay(5000) // delay to make sure transaction can propagate
+
   console.log("Calling riveos_bob.read(bob, file)")
   const [recovered_nonce_bytes, recovered_secret_bytes] = await priveos_bob.read(bob, file)
   console.log("priveos_bob.read(bob, file) succeeded")
