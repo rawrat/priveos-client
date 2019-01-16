@@ -23,21 +23,15 @@ const config_alice = {
 }
 
 
-console.log("config_alice: ", JSON.stringify(config_alice))
-
 var file = uuidv4()
 if (process.argv[2]) {
   file = process.argv[2]
 }
-const a = new Date()
-console.log(config_alice)
 const priveos_alice = new Priveos(config_alice)
 
 async function test() {
   // generate ephemeral key
   const ephemeral_key_private = await eosjs_ecc.randomKey()
-  const b = new Date()
-  console.log("Time elapsed - random key generation: ", (b-a))
   const ephemeral_key_public = eosjs_ecc.privateToPublic(ephemeral_key_private);
   const config_bob = {
     ...config,
@@ -59,8 +53,6 @@ async function test() {
   console.log("Successfully store file. Transaction id: ", transaction_data.transaction_id)
   // throw new Error("ABORT NOW")
   // process.exit(1)
-  const c = new Date()
-  console.log("\r\nTime elapsed - storing file ", (c-b))
   console.log(`Successfully stored file (${file}), now off to reading.`)
   
   // Bob requests access to the file. 
@@ -68,8 +60,6 @@ async function test() {
   console.log(`Push accessgrant action for user ${bob}, contract ${priveos_bob.config.dappContract}, file ${file} and public key ${priveos_bob.config.ephemeralKeyPublic}`)
   await priveos_bob.accessgrant(bob, file, "4,EOS")
   console.log(`\r\nWaiting for transaction to finish`)  
-  const d = new Date()
-  console.log("\r\nTime elapsed - accessgrant transaction", (d-c))
   
   // the following line can be remove once all nodes have upgraded to at least v0.1.2
   await Promise.delay(5000) // delay to make sure transaction can propagate
@@ -77,9 +67,6 @@ async function test() {
   console.log("Calling riveos_bob.read(bob, file)")
   const [recovered_nonce_bytes, recovered_secret_bytes] = await priveos_bob.read(bob, file)
   console.log("priveos_bob.read(bob, file) succeeded")
-  const e = new Date()
-  console.log("d-e", (e-d))
-  console.log("a-a", (e-a))
   // console.log('Y: ', y)
 
   console.log("Original key: ", Priveos.uint8array_to_hex(secret_bytes))
