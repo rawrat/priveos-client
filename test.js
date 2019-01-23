@@ -61,9 +61,6 @@ async function test() {
   await priveos_bob.accessgrant(bob, file, "4,EOS")
   console.log(`\r\nWaiting for transaction to finish`)  
   
-  // the following line can be remove once all nodes have upgraded to at least v0.1.2
-  await Promise.delay(5000) // delay to make sure transaction can propagate
-
   console.log("Calling riveos_bob.read(bob, file)")
   const [recovered_nonce_bytes, recovered_secret_bytes] = await priveos_bob.read(bob, file)
   console.log("priveos_bob.read(bob, file) succeeded")
