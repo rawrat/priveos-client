@@ -64,9 +64,7 @@ async function test() {
   await Promise.delay(5000) // delay to make sure transaction can propagate
 
   console.log("Calling riveos_bob.read(bob, file)")
-  const res = await priveos_bob.read(bob, file)
-  const recovered_key = res.key
-  const recovered_nonce = res.nonce
+  const {key: recovered_key, nonce: recovered_nonce} = await priveos_bob.read(bob, file)
   console.log("priveos_bob.read(bob, file) succeeded")
   // console.log('Y: ', y)
 
