@@ -48,13 +48,11 @@ export default class Priveos {
    * Generate a new symmetric secret + nonce to encrypt files
    */
   get_encryption_keys() {
-    const secret_bytes = nacl.randomBytes(nacl.secretbox.keyLength)
-    const nonce_bytes = nacl.randomBytes(nacl.secretbox.nonceLength)
-    log.debug("Secret (bytes): ", JSON.stringify(secret_bytes))
-    log.debug("Nonce (bytes): ", JSON.stringify(nonce_bytes))
+    const key = nacl.randomBytes(nacl.secretbox.keyLength)
+    const nonce = nacl.randomBytes(nacl.secretbox.nonceLength)
     return {
-      secret_bytes,
-      nonce_bytes
+      key,
+      nonce
     }
   }
 
@@ -62,24 +60,17 @@ export default class Priveos {
    * Trigger a store transaction at priveos level alongside the passed actions
    * @param {string} owner 
    * @param {string} file 
-   * @param {Uint8Array} secret_bytes 
-   * @param {Uint8Array} nonce_bytes 
+   * @param {Uint8Array} key 
+   * @param {Uint8Array} nonce 
    * @param {array} actions Additional actions to trigger alongside store transaction (usability)
    */
-  async store(owner, file, secret_bytes, nonce_bytes, token_symbol, actions = []) {
+  async store(owner, file, key, nonce, token_symbol, actions = []) {
     log.debug(`\r\n###\r\npriveos.store(${owner}, ${file})`)
     
     assert.ok(owner && file, "Owner and file must be supplied")
-    assert.ok(secret_bytes && nonce_bytes, "secret_bytes and nonce_bytes must be supplied (run priveos.get_encryption_keys() before)")
-
-    const secret = Buffer.from(secret_bytes).toString('hex')
-    const nonce = Buffer.from(nonce_bytes).toString('hex')
-    const shared_secret = secret + nonce
-
-    log.debug("shared_secret: ", shared_secret)
-    log.debug("Secret: ", secret)
-    log.debug("Nonce: ", nonce)
-    log.debug("shared_secret: ", shared_secret)
+    assert.ok(key && nonce, "key and nonce must be supplied (run priveos.get_encryption_keys() before)")
+    
+    const shared_secret = Buffer.from(key).toString('hex') + Buffer.from(nonce).toString('hex')
     
     const nodes = await this.get_active_nodes()
     log.debug("\r\nNodes: ", nodes)
@@ -286,7 +277,7 @@ export default class Priveos {
     log.debug("Nonce: ", combined_hex_nonce)
     const key = Priveos.hex_to_uint8array(combined_hex_key)
     const nonce = Priveos.hex_to_uint8array(combined_hex_nonce)
-    return [nonce, key]
+    return {nonce, key}
   }
   
   async get_active_nodes(){
