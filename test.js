@@ -47,9 +47,9 @@ async function test() {
     // Bob requests access to the file. 
     // This transaction will fail if he is not authorised.
 
-  const { secret_bytes, nonce_bytes } = priveos_alice.get_encryption_keys()
+  const { key, nonce } = priveos_alice.get_encryption_keys()
   
-  const transaction_data = await priveos_alice.store(alice, file, secret_bytes, nonce_bytes, "4,EOS")
+  const transaction_data = await priveos_alice.store(alice, file, key, nonce, "4,EOS")
   console.log("Successfully store file. Transaction id: ", transaction_data.transaction_id)
   // throw new Error("ABORT NOW")
   // process.exit(1)
@@ -62,17 +62,19 @@ async function test() {
   console.log(`\r\nWaiting for transaction to finish`)  
   
   console.log("Calling riveos_bob.read(bob, file)")
-  const [recovered_nonce_bytes, recovered_secret_bytes] = await priveos_bob.read(bob, file)
+  const res = await priveos_bob.read(bob, file)
+  const recovered_key = res.key
+  const recovered_nonce = res.nonce
   console.log("priveos_bob.read(bob, file) succeeded")
   // console.log('Y: ', y)
 
-  console.log("Original key: ", Priveos.uint8array_to_hex(secret_bytes))
-  console.log("Original nonce: ", Priveos.uint8array_to_hex(nonce_bytes))
-  console.log("Reconstructed key: ", Priveos.uint8array_to_hex(recovered_secret_bytes))
-  console.log("Reconstructed nonce: ", Priveos.uint8array_to_hex(recovered_nonce_bytes))
+  console.log("Original key: ", Priveos.uint8array_to_hex(key))
+  console.log("Original nonce: ", Priveos.uint8array_to_hex(nonce))
+  console.log("Reconstructed key: ", Priveos.uint8array_to_hex(recovered_key))
+  console.log("Reconstructed nonce: ", Priveos.uint8array_to_hex(recovered_nonce))
   
-  assert.deepStrictEqual(secret_bytes, recovered_secret_bytes)
-  assert.deepStrictEqual(nonce_bytes, recovered_nonce_bytes)
+  assert.deepStrictEqual(key, recovered_key)
+  assert.deepStrictEqual(nonce, recovered_nonce)
   
   console.log("Success!")
 }
