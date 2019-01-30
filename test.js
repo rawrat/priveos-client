@@ -61,6 +61,8 @@ async function test() {
   await priveos_bob.accessgrant(bob, file, "4,EOS")
   console.log(`\r\nWaiting for transaction to finish`)  
   
+  await Promise.delay(5000) // delay to make sure transaction can propagate
+
   console.log("Calling riveos_bob.read(bob, file)")
   const res = await priveos_bob.read(bob, file)
   const recovered_key = res.key
