@@ -1,20 +1,10 @@
 'use strict'
-import nacl from 'tweetnacl'
 import secrets from 'secrets.js-grempe'
-import util from 'tweetnacl-util'
-nacl.util = util
 import assert from 'assert'
 import axios from 'axios'
-import ByteBuffer from 'bytebuffer'
 import eosjs_ecc from 'eosjs-ecc'
 import Eos from 'eosjs'
 import getMultiHash from './multihash'
-import {
-  decodeUTF8,
-  encodeUTF8,
-  encodeBase64,
-  decodeBase64
-} from "tweetnacl-util"
 const log = require('loglevel')
 
 
@@ -77,9 +67,8 @@ export default class Priveos {
    * Trigger a store transaction at priveos level alongside the passed actions
    * @param {string} owner 
    * @param {string} file 
-   * @param {Uint8Array} key 
-   * @param {Uint8Array} nonce 
-   * @param {array} actions Additional actions to trigger alongside store transaction (usability)
+   * @param {Uint8Array} shared_secret 
+   * @param {object} options
    */
   async store(owner, file, shared_secret, options={}) {
     log.debug(`\r\n###\r\npriveos.store(${owner}, ${file})`)
@@ -283,7 +272,7 @@ export default class Priveos {
     const read_key = this.get_config_keys()
     
     const decrypted_shares = shares.map((data) => {
-      return String(eosjs_ecc.Aes.decrypt(read_key.private, data.public_key, data.nonce, ByteBuffer.fromHex(data.message).toBinary(), data.checksum))
+      return String(eosjs_ecc.Aes.decrypt(read_key.private, data.public_key, data.nonce, Buffer.from(data.message, 'hex'), data.checksum))
     })
     return this.hex_to_b64(secrets.combine(decrypted_shares))
   }
@@ -321,11 +310,11 @@ export default class Priveos {
   }
   
   b64_to_hex(string) {
-    return Buffer.from(decodeBase64(string)).toString('hex')
+    return Buffer.from(string, 'base64').toString('hex')
   }
   
   hex_to_b64(string) {
-    return encodeBase64(Buffer.from(string, 'hex'))
+    return Buffer.from(string, 'hex').toString('base64')
   }
 }
 
