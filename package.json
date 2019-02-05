@@ -6,7 +6,7 @@
   "scripts": {
     "build_node": "rimraf dist/node && babel ./ --out-dir dist/node --ignore ./node_modules,./.babelrc,./package.json,./package-lock.json,./npm-debug.log,webpack.browser.js,test.js,config-test.js --copy-files",
     "build_browser": "rimraf dist/browser && webpack --config webpack.browser.js",
-    "test": "babel-node test.js"
+    "test": "jest"
   },
   "author": "",
   "license": "ISC",
@@ -26,6 +26,7 @@
     "uuid": "^3.3.2"
   },
   "devDependencies": {
-    "babel-plugin-transform-object-rest-spread": "^6.26.0"
+    "babel-plugin-transform-object-rest-spread": "^6.26.0",
+    "jest": "^24.0.0"
   }
 }

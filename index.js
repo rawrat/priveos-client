@@ -9,7 +9,23 @@ import ByteBuffer from 'bytebuffer'
 import eosjs_ecc from 'eosjs-ecc'
 import Eos from 'eosjs'
 import getMultiHash from './multihash'
+import {
+  decodeUTF8,
+  encodeUTF8,
+  encodeBase64,
+  decodeBase64
+} from "tweetnacl-util"
 const log = require('loglevel')
+
+
+const default_options = {
+  token_symbol: "4,EOS",
+  actions: [],
+}
+
+function add_defaults(options) {
+  return Object.assign(default_options, options)
+}
 
 export default class Priveos {
   constructor(config) {
@@ -30,6 +46,13 @@ export default class Priveos {
       this.threshold_fun = Priveos.default_threshold_fun
     }
     
+    if(this.config.auditable) {
+      this.auditable = 1
+    } else {
+      this.auditable = 0
+    }
+    
+    console.log("Constructor this.auditable: ", this.auditable)
     if(typeof this.config.timeout_seconds == 'undefined') {
       this.config.timeout_seconds = 10
     }
@@ -51,18 +74,6 @@ export default class Priveos {
   }
 
   /**
-   * Generate a new symmetric secret + nonce to encrypt files
-   */
-  get_encryption_keys() {
-    const key = nacl.randomBytes(nacl.secretbox.keyLength)
-    const nonce = nacl.randomBytes(nacl.secretbox.nonceLength)
-    return {
-      key,
-      nonce
-    }
-  }
-
-  /**
    * Trigger a store transaction at priveos level alongside the passed actions
    * @param {string} owner 
    * @param {string} file 
@@ -70,13 +81,13 @@ export default class Priveos {
    * @param {Uint8Array} nonce 
    * @param {array} actions Additional actions to trigger alongside store transaction (usability)
    */
-  async store(owner, file, key, nonce, token_symbol, actions = []) {
+  async store(owner, file, shared_secret, options={}) {
     log.debug(`\r\n###\r\npriveos.store(${owner}, ${file})`)
     
     assert.ok(owner && file, "Owner and file must be supplied")
-    assert.ok(key && nonce, "key and nonce must be supplied (run priveos.get_encryption_keys() before)")
+    assert.ok(shared_secret, "shared_secret must be supplied")
     
-    const shared_secret = Buffer.from(key).toString('hex') + Buffer.from(nonce).toString('hex')
+    options = add_defaults(options)
     
     const nodes = await this.get_active_nodes()
     log.debug("\r\nNodes: ", nodes)
@@ -84,7 +95,7 @@ export default class Priveos {
     const number_of_nodes = nodes.length
     const threshold = this.threshold_fun(number_of_nodes)
     log.debug(`Nodes: ${number_of_nodes} Threshold: ${threshold}`)
-    const shares = secrets.share(shared_secret, number_of_nodes, threshold)
+    const shares = secrets.share(this.b64_to_hex(shared_secret), number_of_nodes, threshold)
 
     log.debug("Shares: ", shares)
 
@@ -115,7 +126,8 @@ export default class Priveos {
     log.debug("this.config.priveosContract: ", this.config.priveosContract)
     log.debug("this.config.dappContract: ", this.config.dappContract)
     log.debug("owner: ", owner)
-    const fee = await this.get_store_fee(token_symbol)
+    let actions = options.actions
+    const fee = await this.get_store_fee(options.token_symbol)
     if(Priveos.asset_to_amount(fee) > 0) {
       actions = actions.concat([
         {
@@ -127,7 +139,7 @@ export default class Priveos {
           }],
           data: {
             user: owner,
-            currency: token_symbol,
+            currency: options.token_symbol,
           }
         },
         {
@@ -159,36 +171,35 @@ export default class Priveos {
       timeout_seconds: this.config.timeout_seconds,
     })
     
-  
-    const result = await this.eos.transaction(
+    actions = actions.concat([
       {
-        actions: actions.concat([
-          {
-            account: this.config.priveosContract,
-            name: 'store',
-            authorization: [{
-              actor: owner,
-              permission: 'active',
-            }],
-            data: {
-              owner: owner,
-              contract: this.config.dappContract,
-              file: file,
-              data: hash,
-              token: token_symbol,
-              auditable: 0,
-            }
-          }
-        ])
+        account: this.config.priveosContract,
+        name: 'store',
+        authorization: [{
+          actor: owner,
+          permission: 'active',
+        }],
+        data: {
+          owner: owner,
+          contract: this.config.dappContract,
+          file: file,
+          data: hash,
+          token: options.token_symbol,
+          auditable: this.auditable,
+        }
       }
-    )
-    
-    return result
+    ])
+    return await this.eos.transaction({actions})
   } 
   
-  async accessgrant(user, file, token_symbol, actions = []) {
+  async accessgrant(user, file, options={}) {
+    options = add_defaults(options)
     log.debug(`accessgrant user: ${user}`)
-    const fee = await this.get_read_fee(token_symbol)
+    let actions = []
+    if(options.actions) {
+      actions = options.actions
+    }
+    const fee = await this.get_read_fee(options.token_symbol)
     if(Priveos.asset_to_amount(fee) > 0) {
       actions = actions.concat([
         {
@@ -200,7 +211,7 @@ export default class Priveos {
           }],
           data: {
             user: user,
-            currency: token_symbol,
+            currency: options.token_symbol,
           }
         },
         {
@@ -218,28 +229,27 @@ export default class Priveos {
           }
         }
       ])
-    }      
-    return this.eos.transaction({
-      actions: actions.concat(
-        [
-          {
-            account: this.config.priveosContract,
-            name: 'accessgrant',
-            authorization: [{
-              actor: user,
-              permission: 'active',
-            }],
-            data: {
-              user: user,
-              contract: this.config.dappContract,
-              file,
-              public_key: this.config.ephemeralKeyPublic,
-              token: token_symbol,
-            }
+    }
+    actions = actions.concat(
+      [
+        {
+          account: this.config.priveosContract,
+          name: 'accessgrant',
+          authorization: [{
+            actor: user,
+            permission: 'active',
+          }],
+          data: {
+            user: user,
+            contract: this.config.dappContract,
+            file,
+            public_key: this.config.ephemeralKeyPublic,
+            token: options.token_symbol,
           }
-        ]
-      )
-    })
+        }
+      ]
+    )
+    return this.eos.transaction({actions})
   }
   
   async get_read_fee(token) {
@@ -275,15 +285,7 @@ export default class Priveos {
     const decrypted_shares = shares.map((data) => {
       return String(eosjs_ecc.Aes.decrypt(read_key.private, data.public_key, data.nonce, ByteBuffer.fromHex(data.message).toBinary(), data.checksum))
     })
-    const combined = secrets.combine(decrypted_shares)
-    log.debug("Combined: ", combined)
-    const combined_hex_key = combined.slice(0, nacl.secretbox.keyLength*2)
-    const combined_hex_nonce = combined.slice(nacl.secretbox.keyLength*2)
-    log.debug("Hex key: ", combined_hex_key)
-    log.debug("Nonce: ", combined_hex_nonce)
-    const key = Priveos.hex_to_uint8array(combined_hex_key)
-    const nonce = Priveos.hex_to_uint8array(combined_hex_nonce)
-    return {nonce, key}
+    return this.hex_to_b64(secrets.combine(decrypted_shares))
   }
   
   async get_active_nodes(){
@@ -317,6 +319,14 @@ export default class Priveos {
       }
     }
   }
+  
+  b64_to_hex(string) {
+    return Buffer.from(decodeBase64(string)).toString('hex')
+  }
+  
+  hex_to_b64(string) {
+    return encodeBase64(Buffer.from(string, 'hex'))
+  }
 }
 
 // Add some static functions
@@ -325,15 +335,9 @@ Priveos.default_threshold_fun = (N) => {
   return Math.floor(N/2) + 1
 }
 
-Priveos.hex_to_uint8array = (hex_string) => {
-  return new Uint8Array(ByteBuffer.fromHex(hex_string).toArrayBuffer())
-}
-
-Priveos.uint8array_to_hex = (array) => {
-  return Buffer.from(array).toString('hex')
-}
-
 Priveos.asset_to_amount = (asset) => {
   return parseFloat(asset)
 }
+
+Priveos.encryption = require('./encryption')
 
