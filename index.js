@@ -24,6 +24,12 @@ export default class Priveos {
     
     this.config = config
     
+    if(this.config.threshold_fun) {
+      this.threshold_fun = this.config.threshold_fun
+    } else {
+      this.threshold_fun = Priveos.default_threshold_fun
+    }
+    
     if(typeof this.config.timeout_seconds == 'undefined') {
       this.config.timeout_seconds = 10
     }
@@ -76,7 +82,7 @@ export default class Priveos {
     log.debug("\r\nNodes: ", nodes)
 
     const number_of_nodes = nodes.length
-    const threshold = Priveos.get_threshold(number_of_nodes)
+    const threshold = this.threshold_fun(number_of_nodes)
     log.debug(`Nodes: ${number_of_nodes} Threshold: ${threshold}`)
     const shares = secrets.share(shared_secret, number_of_nodes, threshold)
 
@@ -315,7 +321,7 @@ export default class Priveos {
 
 // Add some static functions
 
-Priveos.get_threshold = (N) => {
+Priveos.default_threshold_fun = (N) => {
   return Math.floor(N/2) + 1
 }
 
