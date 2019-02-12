@@ -42,6 +42,12 @@ export default class Priveos {
       this.auditable = 0
     }
     
+    if(this.config.contractpays) {
+      this.contractpays = 1
+    } else {
+      this.contractpays = 0
+    }
+    
     console.log("Constructor this.auditable: ", this.auditable)
     if(typeof this.config.timeout_seconds == 'undefined') {
       this.config.timeout_seconds = 10
@@ -175,6 +181,7 @@ export default class Priveos {
           data: hash,
           token: options.token_symbol,
           auditable: this.auditable,
+          contractpays: this.contractpays,
         }
       }
     ])
@@ -234,6 +241,7 @@ export default class Priveos {
             file,
             public_key: this.config.ephemeralKeyPublic,
             token: options.token_symbol,
+            contractpays: this.contractpays,
           }
         }
       ]
