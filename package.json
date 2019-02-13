@@ -12,8 +12,6 @@
   "license": "ISC",
   "dependencies": {
     "axios": "^0.18.0",
-    "babel-core": "^6.26.3",
-    "babel-preset-env": "^1.7.0",
     "bluebird": "^3.5.2",
     "eosjs": "^16.0.6",
     "eosjs-ecc": "^4.0.4",
@@ -22,11 +20,14 @@
     "loglevel": "^1.6.1",
     "secrets.js-grempe": "^1.1.0",
     "tweetnacl": "^1.0.0",
-    "tweetnacl-util": "^0.15.0",
-    "uuid": "^3.3.2"
+    "tweetnacl-util": "^0.15.0"
   },
   "devDependencies": {
-    "babel-plugin-transform-object-rest-spread": "^6.26.0",
-    "jest": "^24.0.0"
+    "@babel/core": "^7.2.2",
+    "@babel/plugin-proposal-object-rest-spread": "^7.3.2",
+    "@babel/preset-env": "^7.3.1",
+    "babel-jest": "^24.1.0",
+    "jest": "^24.0.0",
+    "uuid": "^3.3.2"
   }
 }

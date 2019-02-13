@@ -5,11 +5,13 @@ import axios from 'axios'
 import eosjs_ecc from 'eosjs-ecc'
 import Eos from 'eosjs'
 import getMultiHash from './multihash'
+import { Symbol, Asset } from './types'
+
 const log = require('loglevel')
 
 
 const default_options = {
-  token_symbol: "4,EOS",
+  token_symbol: new Symbol("4,EOS"),
   actions: [],
 }
 
@@ -29,7 +31,7 @@ export default class Priveos {
     if (!config.httpEndpoint) throw new Error('No httpEndpoint give')
     
     this.config = config
-    
+
     if(this.config.threshold_fun) {
       this.threshold_fun = this.config.threshold_fun
     } else {
@@ -48,7 +50,6 @@ export default class Priveos {
       this.contractpays = 0
     }
     
-    console.log("Constructor this.auditable: ", this.auditable)
     if(typeof this.config.timeout_seconds == 'undefined') {
       this.config.timeout_seconds = 10
     }
@@ -122,36 +123,41 @@ export default class Priveos {
     log.debug("this.config.dappContract: ", this.config.dappContract)
     log.debug("owner: ", owner)
     let actions = options.actions
-    const fee = await this.get_store_fee(options.token_symbol)
-    if(Priveos.asset_to_amount(fee) > 0) {
-      actions = actions.concat([
-        {
-          account: this.config.priveosContract,
-          name: 'prepare',
-          authorization: [{
-            actor: owner,
-            permission: 'active',
-          }],
-          data: {
-            user: owner,
-            currency: options.token_symbol,
+    
+    if(!this.contractpays) {
+      const fee = await this.get_store_fee(options.token_symbol)
+      const balance = await this.get_user_balance(owner, options.token_symbol)
+      if(fee.amount > balance.amount) {
+        const transfer_amount = fee.sub(balance)
+        actions = actions.concat([
+          {
+            account: this.config.priveosContract,
+            name: 'prepare',
+            authorization: [{
+              actor: owner,
+              permission: 'active',
+            }],
+            data: {
+              user: owner,
+              currency: String(options.token_symbol),
+            }
+          },
+          {
+            account: "eosio.token",
+            name: 'transfer',
+            authorization: [{
+              actor: owner,
+              permission: 'active',
+            }],
+            data: {
+              from: owner,
+              to: this.config.priveosContract,
+              quantity: String(transfer_amount),
+              memo: "PrivEOS fee",
+            }
           }
-        },
-        {
-          account: "eosio.token",
-          name: 'transfer',
-          authorization: [{
-            actor: owner,
-            permission: 'active',
-          }],
-          data: {
-            from: owner,
-            to: this.config.priveosContract,
-            quantity: fee,
-            memo: "PrivEOS fee",
-          }
-        }
-      ])
+        ])
+      }
     }
     
     
@@ -179,7 +185,7 @@ export default class Priveos {
           contract: this.config.dappContract,
           file: file,
           data: hash,
-          token: options.token_symbol,
+          token: String(options.token_symbol),
           auditable: this.auditable,
           contractpays: this.contractpays,
         }
@@ -195,36 +201,40 @@ export default class Priveos {
     if(options.actions) {
       actions = options.actions
     }
-    const fee = await this.get_read_fee(options.token_symbol)
-    if(Priveos.asset_to_amount(fee) > 0) {
-      actions = actions.concat([
-        {
-          account: this.config.priveosContract,
-          name: 'prepare',
-          authorization: [{
-            actor: user,
-            permission: 'active',
-          }],
-          data: {
-            user: user,
-            currency: options.token_symbol,
+    if(!this.contractpays) {
+      const fee = await this.get_read_fee(options.token_symbol)
+      const balance = await this.get_user_balance(user, options.token_symbol)
+      if(fee.amount > balance.amount) {
+        const transfer_amount = fee.sub(balance)
+        actions = actions.concat([
+          {
+            account: this.config.priveosContract,
+            name: 'prepare',
+            authorization: [{
+              actor: user,
+              permission: 'active',
+            }],
+            data: {
+              user: user,
+              currency: String(options.token_symbol),
+            }
+          },
+          {
+            account: "eosio.token",
+            name: 'transfer',
+            authorization: [{
+              actor: user,
+              permission: 'active',
+            }],
+            data: {
+              from: user,
+              to: this.config.priveosContract,
+              quantity: String(transfer_amount),
+              memo: "PrivEOS fee",
+            }
           }
-        },
-        {
-          account: "eosio.token",
-          name: 'transfer',
-          authorization: [{
-            actor: user,
-            permission: 'active',
-          }],
-          data: {
-            from: user,
-            to: this.config.priveosContract,
-            quantity: fee,
-            memo: "PrivEOS fee",
-          }
-        }
-      ])
+        ])
+      }
     }
     actions = actions.concat(
       [
@@ -240,7 +250,7 @@ export default class Priveos {
             contract: this.config.dappContract,
             file,
             public_key: this.config.ephemeralKeyPublic,
-            token: options.token_symbol,
+            token: String(options.token_symbol),
             contractpays: this.contractpays,
           }
         }
@@ -250,21 +260,25 @@ export default class Priveos {
   }
   
   async get_read_fee(token) {
-    if(token.indexOf(",") != -1) {
-      token = token.split(",")[1]
-    }
-    const res = await this.eos.getTableRows({json:true, scope: 'priveosrules', code: 'priveosrules',  table: 'readprice', limit:1, lower_bound: token})
+    const res = await this.eos.getTableRows({json:true, scope: 'priveosrules', code: 'priveosrules',  table: 'readprice', limit:1, lower_bound: token.name})
     log.debug('get_priveos_fee: ', res.rows[0].money)
-    return res.rows[0].money
+    return new Asset(res.rows[0].money)
   }
   
   async get_store_fee(token) {
-    if(token.indexOf(",") != -1) {
-      token = token.split(",")[1]
-    }
-    const res = await this.eos.getTableRows({json:true, scope: 'priveosrules', code: 'priveosrules',  table: 'storeprice', limit:1, lower_bound: token})
+    const res = await this.eos.getTableRows({json:true, scope: 'priveosrules', code: 'priveosrules',  table: 'storeprice', limit:1, lower_bound: token.name})
     log.debug('get_priveos_fee: ', res.rows[0].money)
-    return res.rows[0].money
+    return new Asset(res.rows[0].money)
+  }
+  
+  async get_user_balance(user, token) {
+    const res = await this.eos.getTableRows({json:true, scope: user, code: 'priveosrules',  table: 'balances', limit:1})
+    const bal = res.rows[0]
+    if(bal) {
+      return new Asset(bal.funds)
+    } else {
+      return new Asset(0, token)
+    }
   }
 
   async read(owner, file) {
@@ -330,10 +344,6 @@ export default class Priveos {
 
 Priveos.default_threshold_fun = (N) => {
   return Math.floor(N/2) + 1
-}
-
-Priveos.asset_to_amount = (asset) => {
-  return parseFloat(asset)
 }
 
 Priveos.encryption = require('./encryption')
