@@ -91,7 +91,8 @@ export default class Priveos {
     const number_of_nodes = nodes.length
     const threshold = this.threshold_fun(number_of_nodes)
     log.debug(`Nodes: ${number_of_nodes} Threshold: ${threshold}`)
-    const shares = secrets.share(this.b64_to_hex(shared_secret), number_of_nodes, threshold)
+    const hex_secret = Priveos.uint8array_to_hex(shared_secret)
+    const shares = secrets.share(hex_secret, number_of_nodes, threshold)
 
     log.debug("Shares: ", shares)
 
@@ -296,7 +297,8 @@ export default class Priveos {
     const decrypted_shares = shares.map((data) => {
       return String(eosjs_ecc.Aes.decrypt(read_key.private, data.public_key, data.nonce, Buffer.from(data.message, 'hex'), data.checksum))
     })
-    return this.hex_to_b64(secrets.combine(decrypted_shares))
+    const combined = secrets.combine(decrypted_shares)
+    return Priveos.hex_to_uint8array(combined)
   }
   
   async get_active_nodes(){
@@ -330,20 +332,18 @@ export default class Priveos {
       }
     }
   }
-  
-  b64_to_hex(string) {
-    return Buffer.from(string, 'base64').toString('hex')
-  }
-  
-  hex_to_b64(string) {
-    return Buffer.from(string, 'hex').toString('base64')
-  }
 }
 
 // Add some static functions
 
 Priveos.default_threshold_fun = (N) => {
   return Math.floor(N/2) + 1
+}
+Priveos.hex_to_uint8array = (hex_string) => {
+  return new Uint8Array(Buffer.from(hex_string, 'hex'))
+}
+Priveos.uint8array_to_hex = (array) => {
+  return Buffer.from(array).toString('hex')
 }
 
 Priveos.encryption = require('./encryption')

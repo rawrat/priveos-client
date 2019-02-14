@@ -1,7 +1,11 @@
 import { generateKey, encrypt, decrypt } from './encryption'
+import {
+  decodeUTF8,
+  encodeUTF8,
+} from "tweetnacl-util"
 
 test('normal strings', () => {
-  const message = "Alices loves Bob! $øö“”``äÄñç🚀"
+  const message = decodeUTF8("Alices loves Bob! $øö“”``äÄñç🚀")
   const key = generateKey()
   const encrypted = encrypt(message, key)
   const decrypted = decrypt(encrypted, key)
@@ -9,19 +13,13 @@ test('normal strings', () => {
 })
 
 test('objects', () => {
-  const obj = {x: "Blabla", y: {z: "Ohai"}}
+  const obj = decodeUTF8(JSON.stringify({x: "Blabla", y: {z: "Ohai"}}))
   const key = generateKey()
   const encrypted = encrypt(obj, key)
   const decrypted = decrypt(encrypted, key)
   expect(decrypted).toStrictEqual(obj)
 })
 
-test('null object', () => {
-  const key = generateKey()
-  const encrypted = encrypt(null, key)
-  const decrypted = decrypt(encrypted, key)
-  expect(decrypted).toBe(null)
-})
 
 test('calling without arguments', () => {
   expect(() => {
