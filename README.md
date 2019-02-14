@@ -4,7 +4,8 @@ This is the javascript client library that makes it easy to integrate privEOS in
 
 ## Installation and Usage
 
-    npm install @babel/node -g
+    npm install @babel/node @babel/core @babel/cli -g
+    
 
     git clone https://github.com/rawrat/priveos-client
     cd priveos-client
