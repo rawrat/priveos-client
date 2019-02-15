@@ -21,4 +21,4 @@ More documentation and examples coming…
 ## Testing
 ### Test Jungle
     cp config-test.js.jungle config-test.js
-    babel-node test.js
+    babel-node example.js
