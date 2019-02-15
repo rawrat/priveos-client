@@ -49,8 +49,8 @@ async function test() {
 
   const key = Priveos.encryption.generateKey()
   
-  const transaction_data = await priveos_alice.store(alice, file, key)
-  console.log("Successfully store file. Transaction id: ", transaction_data.transaction_id)
+  const txid = await priveos_alice.store(alice, file, key)
+  console.log("Successfully store file. Transaction id: ", txid)
   // throw new Error("ABORT NOW")
   // process.exit(1)
   console.log(`Successfully stored file (${file}), now off to reading.`)
@@ -58,13 +58,14 @@ async function test() {
   // Bob requests access to the file. 
   // This transaction will fail if he is not authorised.
   console.log(`Push accessgrant action for user ${bob}, contract ${priveos_bob.config.dappContract}, file ${file} and public key ${priveos_bob.config.ephemeralKeyPublic}`)
-  await priveos_bob.accessgrant(bob, file)
+  const accessgrant_xid = await priveos_bob.accessgrant(bob, file, txid)
   console.log(`\r\nWaiting for transaction to finish`)  
+  console.log(`txid: ${JSON.stringify(txid, null, 2)}`)
   
-  await Promise.delay(5000) // delay to make sure transaction can propagate
+  await Promise.delay(1000) // delay to make sure transaction can propagate
 
   console.log("Calling riveos_bob.read(bob, file)")
-  const recovered_key = await priveos_bob.read(bob, file)
+  const recovered_key = await priveos_bob.read(bob, file, accessgrant_xid)
   console.log("priveos_bob.read(bob, file) succeeded")
   // console.log('Y: ', y)
 

@@ -182,7 +182,7 @@ export default class Priveos {
           permission: 'active',
         }],
         data: {
-          owner: owner,
+          user: owner,
           contract: this.config.dappContract,
           file: file,
           data: hash,
@@ -192,10 +192,12 @@ export default class Priveos {
         }
       }
     ])
-    return await this.eos.transaction({actions})
+    const res = await this.eos.transaction({actions})
+    return res.transaction_id
   } 
   
-  async accessgrant(user, file, options={}) {
+  async accessgrant(user, file, txid, options={}) {
+    console.log("OHAI accessgrant: txid: ", txid)
     options = add_defaults(options)
     log.debug(`accessgrant user: ${user}`)
     let actions = []
@@ -253,11 +255,13 @@ export default class Priveos {
             public_key: this.config.ephemeralKeyPublic,
             token: String(options.token_symbol),
             contractpays: this.contractpays,
+            txid,
           }
         }
       ]
     )
-    return this.eos.transaction({actions})
+    const res = await this.eos.transaction({actions})
+    return res.transaction_id
   }
   
   async get_read_fee(token) {
@@ -282,12 +286,14 @@ export default class Priveos {
     }
   }
 
-  async read(owner, file) {
+  async read(owner, file, txid) {
+    assert.ok(txid, "Please specify the transaction_id of the accessgrant transaction as third parameter")
     const response = await axios.post(this.config.brokerUrl + '/broker/read/', {
       file: file,
       requester: owner,
       dappcontract: this.config.dappContract,
       timeout_seconds: this.config.timeout_seconds,
+      txid: txid,
     })
     const shares = response.data
     log.debug("Shares: ", shares)
