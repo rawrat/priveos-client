@@ -257,7 +257,8 @@ export default class Priveos {
         }
       ]
     )
-    return this.eos.transaction({actions})
+    const res = await this.eos.transaction({actions})
+    return res.transaction_id
   }
   
   async get_read_fee(token) {
@@ -282,13 +283,15 @@ export default class Priveos {
     }
   }
 
-  async read(owner, file) {
-    const response = await axios.post(this.config.brokerUrl + '/broker/read/', {
+  async read(owner, file, txid) {
+    const data = {
       file: file,
       requester: owner,
       dappcontract: this.config.dappContract,
+      txid,
       timeout_seconds: this.config.timeout_seconds,
-    })
+    }
+    const response = await axios.post(this.config.brokerUrl + '/broker/read/', data)
     const shares = response.data
     log.debug("Shares: ", shares)
     
