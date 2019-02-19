@@ -60,8 +60,9 @@ async function test() {
   console.log(`Push accessgrant action for user ${bob}, contract ${priveos_bob.config.dappContract}, file ${file} and public key ${priveos_bob.config.ephemeralKeyPublic}`)
   const txid = await priveos_bob.accessgrant(bob, file)
   console.log(`\r\nWaiting for transaction to finish`)  
+  console.log("Accessgrant txid: ", txid)
   
-  //await Promise.delay(5000) // delay to make sure transaction can propagate
+  // no delay needed between accessgrant and read
 
   console.log("Calling riveos_bob.read(bob, file)")
   const recovered_key = await priveos_bob.read(bob, file, txid)
