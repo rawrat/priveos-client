@@ -2,15 +2,16 @@
   "name": "priveos",
   "version": "v0.1.5",
   "description": "privEOS client",
-  "main": "index.js",
+  "main": "dist/node/index.js",
   "scripts": {
-    "build_node": "babel ./ --out-dir dist/node --ignore ./node_modules,./.babelrc,./package.json,./package-lock.json,./npm-debug.log,webpack.browser.js,test.js,config-test.js --copy-files",
+    "build_node": "rm -rf dist/node && babel src --out-dir dist/node",
     "build_browser": "webpack --config webpack.browser.js",
     "test": "jest"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@babel/runtime": "^7.3.1",
     "axios": "^0.18.0",
     "bluebird": "^3.5.2",
     "eosjs": "^16.0.6",
@@ -26,6 +27,7 @@
   "devDependencies": {
     "@babel/core": "^7.3.3",
     "@babel/plugin-proposal-object-rest-spread": "^7.3.2",
+    "@babel/plugin-transform-runtime": "^7.2.0",
     "@babel/preset-env": "^7.3.1",
     "babel-jest": "^24.1.0",
     "jest": "^24.0.0",
