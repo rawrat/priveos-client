@@ -19,7 +19,7 @@ function add_defaults(options) {
   return Object.assign(default_options, options)
 }
 
-export default class Priveos {
+class Priveos {
   constructor(config) {
     if (!config) throw new Error('Instantiating Priveos requires config object')
     if (!config.privateKey && !config.eos) throw new Error('Instantiating Priveos requires either config.privateKey or config.eos proxy instance (e.g. scatter)')
@@ -351,3 +351,4 @@ Priveos.uint8array_to_hex = (array) => {
 
 Priveos.encryption = require('./encryption')
 
+module.exports = Priveos

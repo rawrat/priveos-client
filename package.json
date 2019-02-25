@@ -1,11 +1,12 @@
 {
   "name": "priveos",
-  "version": "v0.1.5",
+  "version": "v0.1.7",
   "description": "privEOS client",
   "main": "dist/node/index.js",
   "scripts": {
     "build_node": "rm -rf dist/node && babel src --out-dir dist/node",
     "build_browser": "webpack --config webpack.browser.js",
+    "prePublish": "npm run build_node && npm run build_browser",
     "test": "jest"
   },
   "author": "",
