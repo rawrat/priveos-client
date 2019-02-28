@@ -15,7 +15,9 @@ You can also take a look at our example applications:
 * [Squeakr](https://github.com/rawrat/squeakr/): Decentralised Private Twitter
 * [Data Marketplace](https://github.com/rawrat/privEOS_Demo_App): Data Marketplace where you can buy and sell data
 
-## Testing
+## Development
+For more informations on local development, see [DEVELOPMENT.md](DEVELOPMENT.md).
+
 ### Test Jungle
     cp config-test.js.jungle config-test.js
     babel-node example.js
