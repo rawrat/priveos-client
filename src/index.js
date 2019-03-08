@@ -171,6 +171,7 @@ class Priveos {
       owner: owner,
       dappcontract: this.config.dappContract,
       timeout_seconds: this.config.timeout_seconds,
+      chainId: this.config.chainId,
     })
     
     actions = actions.concat([
@@ -290,6 +291,7 @@ class Priveos {
       dappcontract: this.config.dappContract,
       txid,
       timeout_seconds: this.config.timeout_seconds,
+      chainId: this.config.chainId,
     }
     const response = await axios.post(this.config.brokerUrl + '/broker/read/', data)
     const shares = response.data
