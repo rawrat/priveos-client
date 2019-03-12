@@ -13,7 +13,6 @@ import uuidv4 from 'uuid/v4'
 import eosjs_ecc from 'eosjs-ecc'
 const alice = 'priveosalice'
 const bob = 'priveosbob11'
-import Promise from 'bluebird'
 const config_alice = {
   ...config,
   ...{
