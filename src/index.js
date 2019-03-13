@@ -54,8 +54,9 @@ class Priveos {
       this.config.timeout_seconds = 10
     }
     
-    log.setDefaultLevel(this.config.logLevel || 'info')
-    
+    // log.setDefaultLevel(this.config.logLevel || 'info')
+    log.setLevel(this.config.logLevel || 'info') // required to act according config
+
     if (this.config.privateKey) {
       this.eos = Eos({httpEndpoint:this.config.httpEndpoint, chainId: this.config.chainId, keyProvider: [this.config.privateKey]})
     } else {
@@ -86,6 +87,11 @@ class Priveos {
     options = add_defaults(options)
     
     const nodes = await this.get_active_nodes()
+    if (nodes.length == 0) {
+      const msg = "No nodes available on priveos network."
+      log.error(msg)
+      return new Error(msg)
+    }
     log.debug("\r\nNodes: ", nodes)
 
     const number_of_nodes = nodes.length
