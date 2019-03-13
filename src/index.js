@@ -2,7 +2,7 @@
 import secrets from 'secrets.js-grempe'
 import assert from 'assert'
 import axios from 'axios'
-import eosjs_ecc from 'eosjs-ecc'
+import eosjs_ecc from 'eosjs-ecc-priveos'
 import Eos from 'eosjs'
 import getMultiHash from './multihash'
 import { Symbol, Asset } from './types'
@@ -104,9 +104,10 @@ class Priveos {
       log.debug(`\r\nNode ${node.owner}`)
       const plaintext = shares.pop()
       
-      const signature = eosjs_ecc.Signature.sign(plaintext, keys.private)
+      const signature = eosjs_ecc.sign(plaintext, keys.private)
+      console.log("SIGNATURE: ", signature)
       const share = eosjs_ecc.Aes.encrypt(keys.private , public_key, plaintext)
-      
+      console.log("Share: ", share)
       return {
         node: node.owner, 
         message: share.message.toString('hex'),
@@ -168,6 +169,7 @@ class Priveos {
     var buffer = Buffer.from(JSON.stringify(data))
     const hash = await getMultiHash(buffer)
     log.debug("Calling /broker/store/ for hash ", hash)
+    log.info("Submitting the following data to broker: ", JSON.stringify(data, null, 2))
     const response = await axios.post(this.config.brokerUrl + '/broker/store/', {
       file: file,
       data: JSON.stringify(data),
@@ -302,11 +304,12 @@ class Priveos {
     
     const decrypted_shares = shares.map((data) => {
       
-      
+      console.log(`data: ${JSON.stringify(data, null, 2)}`)
       const decrypted = String(eosjs_ecc.Aes.decrypt(read_key.private, data.public_key, data.nonce, Buffer.from(data.message, 'hex'), data.checksum))
       
+      console.log(`decrypted: ${decrypted}`)
       // check signature
-      assert(eosjs_ecc.Signature.verify(decrypted, data.public_key), `Node ${}: Invalid signature. Data is not signed by ${data.public_key}.`)
+      assert(eosjs_ecc.verify(decrypted, data.public_key), `Node: Invalid signature. Data is not signed by ${data.public_key}.`)
       
       return decrypted
     })
