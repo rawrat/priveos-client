@@ -99,28 +99,28 @@ class Priveos {
     const keys = this.get_config_keys()
 
     const payload = nodes.map(node => {
-      const public_key = node.node_key
+      const node_key = node.node_key
 
       log.debug(`\r\nNode ${node.owner}`)
-      const plaintext = shares.pop()
+      const message = shares.pop()
       
-      const signature = eosjs_ecc.sign(plaintext, keys.private)
-      console.log("SIGNATURE: ", signature)
-      const share = eosjs_ecc.Aes.encrypt(keys.private , public_key, plaintext)
-      console.log("Share: ", share)
+      const sig = eosjs_ecc.sign(message, keys.private)
+      const data = {
+        s: sig,
+        m: message,
+      }
+      let share = eosjs_ecc.Aes.encrypt(keys.private , node_key, JSON.stringify(data))
+      share = share.toString('base64')
       return {
         node: node.owner, 
-        message: share.message.toString('hex'),
-        nonce: String(share.nonce),
-        checksum: share.checksum,
-        public_key,
-        signature,
+        share,
+        node_key,
       }
     })
     const data = {
       data: payload,
       threshold: threshold,
-      public_key: keys.public,
+      user_key: keys.public,
     }
     log.debug("\r\nBundling... ")
     log.debug("Constructed this (data): ", JSON.stringify(data))
@@ -297,21 +297,16 @@ class Priveos {
       timeout_seconds: this.config.timeout_seconds,
     }
     const response = await axios.post(this.config.brokerUrl + '/broker/read/', data)
-    const shares = response.data
-    log.debug("Shares: ", shares)
-    
+    const {shares, user_key} = response.data
     const read_key = this.get_config_keys()
     
-    const decrypted_shares = shares.map((data) => {
+    const decrypted_shares = shares.map((data) => {      
+      const decrypted = eosjs_ecc.Aes.decrypt(read_key.private, data.node_key, Buffer.from(data.message, 'base64'))
+      const {s: signature, m: message} = JSON.parse(decrypted)
       
-      console.log(`data: ${JSON.stringify(data, null, 2)}`)
-      const decrypted = String(eosjs_ecc.Aes.decrypt(read_key.private, data.public_key, data.nonce, Buffer.from(data.message, 'hex'), data.checksum))
+      assert(eosjs_ecc.verify(signature, message, user_key), `Node ${data.node_key}: Invalid signature. Data is not signed by ${user_key}.`)
       
-      console.log(`decrypted: ${decrypted}`)
-      // check signature
-      assert(eosjs_ecc.verify(decrypted, data.public_key), `Node: Invalid signature. Data is not signed by ${data.public_key}.`)
-      
-      return decrypted
+      return message
     })
     const combined = secrets.combine(decrypted_shares)
     return Priveos.hex_to_uint8array(combined)
