@@ -16,7 +16,7 @@
     "axios": "^0.18.0",
     "bluebird": "^3.5.2",
     "eosjs": "^16.0.6",
-    "eosjs-ecc": "^4.0.4",
+    "eosjs-ecc-priveos": "^4.0.4",
     "global": "^4.3.2",
     "ipfs-unixfs": "^0.1.16",
     "ipld-dag-pb": "^0.15.1",
