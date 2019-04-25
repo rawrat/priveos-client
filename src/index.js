@@ -378,8 +378,9 @@ Priveos.uint8array_to_hex = (array) => {
 }
 
 Priveos.encryption = require('./encryption')
+Priveos.eosjs_ecc = eosjs_ecc_priveos
 
 module.exports = Priveos
-if(window) {
+if(typeof window !== 'undefined') {
   window.Priveos = Priveos
 }
