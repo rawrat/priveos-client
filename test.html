@@ -73,16 +73,18 @@
       const recovered_key = await priveos_bob.read(bob, file, txid)
       console.log("priveos_bob.read(bob, file) succeeded")
       // console.log('Y: ', y)
-
+      console.log("recovered_key: ", recovered_key)
       console.log("Original key: ", key)
-      console.log("Reconstructed key: ", recovered_key)
       
       const key_string = key.toString('hex')
-      const recovered_key_string = key.toString('hex')
+      const recovered_key_string = recovered_key.toString('hex')
+      console.log("Original key: ", key_string)
+      console.log("Reconstructed key: ", recovered_key_string)
+
       if(key_string == recovered_key_string) {
         console.log("Success!")
       } else {
-        throw `Error: Reovered key is "${recovered_key_string}" but original key is: "${key_string}"`
+        console.log(`Error: Reovered key is "${recovered_key_string}" but original key is: "${key_string}"`)
       }      
     }
     window.onload = main
