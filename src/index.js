@@ -380,3 +380,6 @@ Priveos.uint8array_to_hex = (array) => {
 Priveos.encryption = require('./encryption')
 
 module.exports = Priveos
+if(window) {
+  window.Priveos = Priveos
+}
