@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="./dist/browser/priveos.js"></script>
+  </head>
+  
+  <script>
+    async function main() {
+      const config = {
+        dappContract: 'dappcontract',
+        priveosContract: 'priveosrules',
+        httpEndpoint: 'http://localhost:8888',
+        chainId: 'cf057bbfb72640471fd910bcb67639c22df9f92470936cddc1ade0e2f2e7dc4f',
+        brokerUrl: 'http://localhost:4000',
+        logLevel: 'debug',
+      }
+      const file = 'djlkajhfsghosr'
+      
+      // setup alice
+      const alice = 'priveosalice'
+      const bob = 'priveosbob11'
+      const config_alice = {
+        ...config,
+        ...{
+          privateKey: '5HrReeu6FhGFWiHW7tsvLLN4dm2TDhizP9B7xWi4emG9RmVfLss',
+          publicKey: 'EOS6Zy532Rgkuo1SKjYbPxLKYs8o2sEzLApNu8Ph66ysjstARrnHm', 
+        }
+      }
+      const priveos_alice = new Priveos(config_alice)
+      
+      // setup bob
+      const ephemeral_key_private = await Priveos.eosjs_ecc.randomKey()
+      const ephemeral_key_public = Priveos.eosjs_ecc.privateToPublic(ephemeral_key_private);
+      const config_bob = {
+        ...config,
+        ...{
+          privateKey: '5JqvAdD1vQG3MRAsC9RVzdPJxnUCBNVfvRhL7ZmQ7rCqUoMGrnw',
+          publicKey: 'EOS87xyhE6czLCpuF8PaEGc3UiXHHyCMQB2zHygpEsXyDJHadHWFK',
+          ephemeralKeyPrivate: ephemeral_key_private,
+          ephemeralKeyPublic: ephemeral_key_public,
+        }
+      }
+      const priveos_bob = new Priveos(config_bob)
+      
+      const key = Priveos.encryption.generateKey()
+      console.log("key: ", key)
+      console.log("Calling priveos_alice.store")
+      console.log(`Alice: "${alice}" file: "${file}" key: "${key}"`)
+      const transaction_data = await priveos_alice.store(alice, file, key)
+      console.log("Successfully stored file. Transaction id: ", transaction_data.transaction_id)
+      // throw new Error("ABORT NOW")
+      // process.exit(1)
+      console.log(`Successfully stored file (${file}), now off to reading.`)
+      
+      // Bob requests access to the file. 
+      // This transaction will fail if he is not authorised.
+      console.log(`Push accessgrant action for user ${bob}, contract ${priveos_bob.config.dappContract}, file ${file} and public key ${priveos_bob.config.ephemeralKeyPublic}`)
+      const txid = await priveos_bob.accessgrant(bob, file)
+      console.log(`\r\nWaiting for transaction to finish`)  
+      console.log("Accessgrant txid: ", txid)
+      
+      // no delay needed between accessgrant and read
+
+      console.log("Calling riveos_bob.read(bob, file)")
+      const recovered_key = await priveos_bob.read(bob, file, txid)
+      console.log("priveos_bob.read(bob, file) succeeded")
+      // console.log('Y: ', y)
+
+      console.log("Original key: ", key)
+      console.log("Reconstructed key: ", recovered_key)
+      
+      const key_string = key.toString('hex')
+      const recovered_key_string = key.toString('hex')
+      if(key_string == recovered_key_string) {
+        console.log("Success!")
+      } else {
+        throw `Error: Reovered key is "${recovered_key_string}" but original key is: "${key_string}"`
+      }      
+    }
+    window.onload = main
+  </script>
+  <body>
+    
+    
+  </body>
+</html>
