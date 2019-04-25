@@ -5,6 +5,14 @@
   </head>
   
   <script>
+  
+    let console = {}
+    console.log = function() {
+      const s = Array.from(arguments).join("")
+      const container = document.createElement("div")
+      container.innerHTML = s
+      document.body.appendChild(container)
+    }
     async function main() {
       const config = {
         dappContract: 'dappcontract',
