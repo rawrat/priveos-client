@@ -1,4 +1,4 @@
-import { secretbox, randomBytes } from "tweetnacl/nacl-fast"
+const { secretbox, randomBytes } = require("tweetnacl/nacl-fast")
 
 export function generateKey() {
   return randomBytes(secretbox.keyLength)

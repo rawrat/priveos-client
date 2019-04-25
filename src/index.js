@@ -1,11 +1,11 @@
 'use strict'
-import secrets from 'secrets.js-grempe'
-import assert from 'assert'
-import axios from 'axios'
-import eosjs_ecc_priveos from 'eosjs-ecc-priveos'
-import Eos from 'eosjs'
-import getMultiHash from './multihash'
-import { Symbol, Asset } from './types'
+const secrets = require('secrets.js-grempe')
+const assert = require('assert')
+const axios = require('axios')
+const eosjs_ecc_priveos = require('eosjs-ecc-priveos')
+const Eos = require('eosjs')
+const getMultiHash = require('./multihash')
+const { Symbol, Asset } = require('./types')
 
 const log = require('loglevel')
 
@@ -176,7 +176,8 @@ class Priveos {
     const hash = await getMultiHash(buffer)
     log.debug("Calling /broker/store/ for hash ", hash)
     log.info("Submitting the following data to broker: ", JSON.stringify(data, null, 2))
-    const response = await axios.post(this.config.brokerUrl + '/broker/store/', {
+    const url = this.config.brokerUrl + '/broker/store/'
+    const response = await axios.post(url, {
       file: file,
       data: JSON.stringify(data),
       owner: owner,

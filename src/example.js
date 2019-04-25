@@ -1,7 +1,7 @@
 'use strict'
 
-import assert from 'assert'
-import Priveos from './index'
+const assert = require('assert')
+const Priveos = require('./index')
 var config
 try {
   config = require('./config-test').default

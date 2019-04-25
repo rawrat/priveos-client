@@ -1,8 +1,8 @@
-import { generateKey, encrypt, decrypt } from './encryption'
-import {
+const { generateKey, encrypt, decrypt } = require('./encryption')
+const {
   decodeUTF8,
   encodeUTF8,
-} from "tweetnacl-util"
+} = require("tweetnacl-util")
 
 test('normal strings', () => {
   const message = decodeUTF8("Alices loves Bob! $øö“”``äÄñç🚀")

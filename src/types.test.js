@@ -1,4 +1,4 @@
-import { Symbol, Asset } from './types'
+const { Symbol, Asset } = require('./types')
 
 test('Symbol precision', () => {
   let s = new Symbol("4,EOS")
