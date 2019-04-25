@@ -1,6 +1,6 @@
 {
   "name": "priveos",
-  "version": "v0.1.8",
+  "version": "v0.1.9",
   "description": "privEOS client",
   "main": "dist/node/index.js",
   "scripts": {
