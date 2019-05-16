@@ -6,6 +6,7 @@ const eosjs_ecc_priveos = require('eosjs-ecc-priveos')
 const Eos = require('eosjs')
 const getMultiHash = require('./multihash')
 const { Symbol, Asset } = require('./types')
+const Bourne = require('@hapi/bourne')
 
 const log = require('loglevel')
 
@@ -314,7 +315,7 @@ class Priveos {
       const decrypted = eosjs_ecc_priveos.Aes.decrypt(read_key.private, data.node_key, Buffer.from(data.message, 'base64'))
       console.log("decrypted: ", String(decrypted))
       try {
-        const {s: signature, m: message} = JSON.parse(decrypted)
+        const {s: signature, m: message} = Bourne.parse(String(decrypted))
       
         assert(eosjs_ecc_priveos.verify(signature, message, user_key), `Node ${data.node_key}: Invalid signature. Data is not signed by ${user_key}.`)
         return message
