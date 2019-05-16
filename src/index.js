@@ -21,14 +21,14 @@ function add_defaults(options) {
 
 class Priveos {
   constructor(config) {
-    if (!config) throw new Error('Instantiating Priveos requires config object')
-    if (!config.privateKey && !config.eos) throw new Error('Instantiating Priveos requires either config.privateKey or config.eos proxy instance (e.g. scatter)')
-    if (config.privateKey && !config.publicKey) throw new Error('When passing config.privateKey the related config.publicKey must be present too')
-    if (config.ephemeralKeyPrivate && !config.ephemeralKeyPublic) throw new Error('When passing config.ephemeralKeyPrivate the related config.ephemeralKeyPublic must be present too')
-    if (!config.dappContract) throw new Error('Instantiating Priveos requires a dappContract set')
-    if (!config.chainId) throw new Error('No chainId given')
-    if (!config.brokerUrl) throw new Error('No brokerUrl given')
-    if (!config.httpEndpoint) throw new Error('No httpEndpoint give')
+    if (typeof config !== "object" || config === null) throw new TypeError('No config given')
+    if (!config.privateKey && !config.eos) throw new TypeError('None of privateKey or eos instance given')
+    if (config.privateKey && !config.publicKey) throw new TypeError('privateKey without publicKey given')
+    if (config.ephemeralKeyPrivate && !config.ephemeralKeyPublic) throw new TypeError('ephemeralKeyPrivate but no ephemeralKeyPublic given')
+    if (!config.dappContract) throw new TypeError('No dappContract given')
+    if (!config.chainId) throw new TypeError('No chainId given')
+    if (!config.brokerUrl) throw new TypeError('No brokerUrl given')
+    if (!config.httpEndpoint) throw new TypeError('No httpEndpoint given')
     
     this.config = config
 
