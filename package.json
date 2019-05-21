@@ -33,6 +33,7 @@
     "@babel/preset-env": "^7.3.1",
     "babel-jest": "^24.8.0",
     "jest": "^24.0.0",
+    "proxyquire": "^2.1.0",
     "uuid": "^3.3.2",
     "webpack": "^4.29.6",
     "webpack-cli": "^3.2.3"

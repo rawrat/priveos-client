@@ -42,8 +42,8 @@ export class Asset {
       this.symbol = new Symbol(name, precision)
       
     } else {
-    this.amount = a
-    this.symbol = b      
+      this.amount = a
+      this.symbol = b
     }
   }
   
