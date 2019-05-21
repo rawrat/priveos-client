@@ -33,19 +33,19 @@ class Priveos {
     
     this.config = config
 
-    if(this.config.threshold_fun) {
+    if (this.config.threshold_fun) {
       this.threshold_fun = this.config.threshold_fun
     } else {
       this.threshold_fun = Priveos.default_threshold_fun
     }
     
-    if(this.config.auditable) {
+    if (this.config.auditable) {
       this.auditable = 1
     } else {
       this.auditable = 0
     }
     
-    if(this.config.contractpays) {
+    if (this.config.contractpays) {
       this.contractpays = 1
     } else {
       this.contractpays = 0
@@ -59,6 +59,7 @@ class Priveos {
     log.setLevel(this.config.logLevel || 'info') // required to act according config
 
     if (this.config.privateKey) {
+      console.log('this.config', this.config)
       this.eos = Eos({httpEndpoint:this.config.httpEndpoint, chainId: this.config.chainId, keyProvider: [this.config.privateKey]})
     } else {
       this.eos = this.config.eos
@@ -276,13 +277,13 @@ class Priveos {
   }
   
   async get_read_fee(token) {
-    const res = await this.eos.getTableRows({json:true, scope: 'priveosrules', code: 'priveosrules',  table: 'readprice', limit:1, lower_bound: token.name})
+    const res = await this.eos.getTableRows({json:true, scope: 'priveosrules', code: 'priveosrules', table: 'readprice', limit:1, lower_bound: token.name})
     log.debug('get_priveos_fee: ', res.rows[0].money)
     return new Asset(res.rows[0].money)
   }
   
   async get_store_fee(token) {
-    const res = await this.eos.getTableRows({json:true, scope: 'priveosrules', code: 'priveosrules',  table: 'storeprice', limit:1, lower_bound: token.name})
+    const res = await this.eos.getTableRows({json:true, scope: 'priveosrules', code: 'priveosrules', table: 'storeprice', limit:1, lower_bound: token.name})
     log.debug('get_priveos_fee: ', res.rows[0].money)
     return new Asset(res.rows[0].money)
   }
@@ -309,6 +310,8 @@ class Priveos {
     const response = await axios.post(this.config.brokerUrl + '/broker/read/', data)
     const {shares, user_key} = response.data
     const read_key = this.get_config_keys()
+
+    console.log("### response", JSON.stringify(response.data, null, 2))
     
     const decrypted_shares = shares.map((data) => { 
       console.log("data: ", JSON.stringify(data, null, 2))     

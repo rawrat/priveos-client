@@ -64,7 +64,10 @@ async function test() {
   // no delay needed between accessgrant and read
 
   console.log("Calling riveos_bob.read(bob, file)")
-  const recovered_key = await priveos_bob.read(bob, file, txid)
+  // for loop for benchmarking
+  // for (var i = 0; i < 10000; i++) {
+    const recovered_key = await priveos_bob.read(bob, file, txid)
+  // }
   console.log("priveos_bob.read(bob, file) succeeded")
   // console.log('Y: ', y)
 
