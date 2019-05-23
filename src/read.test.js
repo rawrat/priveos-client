@@ -39,7 +39,7 @@ const ephKeysReader = {
 const fakeShares = originalShares
 
 
-describe("Priveos#read", () => {
+describe("read.js", () => {
   // let priveos = null
   // beforeEach(() => {
   //   priveos = new Priveos({
@@ -54,7 +54,7 @@ describe("Priveos#read", () => {
   //   })
   // })
 
-  describe("Priveos#unpack_share", () => {
+  describe("#unpack_share", () => {
     test('should return the decrypted share when valid', () => {
       const data = Read.unpack_share(originalShares.data.shares[0], originalShares.data.user_key, ephKeysReader)
       expect(data).toBe("80584a6a30a2539f36117ae00019a0e449eb80715e343d8c1de3da5efb81452804c62424d737679c54a1c2befa56928aa66")
