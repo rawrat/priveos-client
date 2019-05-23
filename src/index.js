@@ -6,7 +6,7 @@ const eosjs_ecc_priveos = require('eosjs-ecc-priveos')
 const Eos = require('eosjs')
 const getMultiHash = require('./multihash')
 const { Symbol, Asset } = require('./types')
-const Bourne = require('@hapi/bourne')
+import { unpack_share } from './read'
 
 const log = require('loglevel')
 
@@ -59,7 +59,6 @@ class Priveos {
     log.setLevel(this.config.logLevel || 'info') // required to act according config
 
     if (this.config.privateKey) {
-      console.log('this.config', this.config)
       this.eos = Eos({httpEndpoint:this.config.httpEndpoint, chainId: this.config.chainId, keyProvider: [this.config.privateKey]})
     } else {
       this.eos = this.config.eos
@@ -291,7 +290,7 @@ class Priveos {
   async get_user_balance(user, token) {
     const res = await this.eos.getTableRows({json:true, scope: user, code: 'priveosrules',  table: 'balances', limit:1})
     const bal = res.rows[0]
-    if(bal) {
+    if (bal) {
       return new Asset(bal.funds)
     } else {
       return new Asset(0, token)
@@ -309,35 +308,18 @@ class Priveos {
     }
     const response = await axios.post(this.config.brokerUrl + '/broker/read/', data)
     const {shares, user_key} = response.data
-    const read_key = this.get_config_keys()
-
-    console.log("### response", JSON.stringify(response.data, null, 2))
+    const key_pair = this.get_config_keys()
     
-    const decrypted_shares = shares.map((data) => { 
-      console.log("data: ", JSON.stringify(data, null, 2))     
-      const decrypted = eosjs_ecc_priveos.Aes.decrypt(read_key.private, data.node_key, Buffer.from(data.message, 'base64'))
-      console.log("decrypted: ", String(decrypted))
-      try {
-        const {s: signature, m: message} = Bourne.parse(String(decrypted))
-      
-        assert(eosjs_ecc_priveos.verify(signature, message, user_key), `Node ${data.node_key}: Invalid signature. Data is not signed by ${user_key}.`)
-        return message
-      } catch(e) {
-        // old format (v0.1.4 and lower)
-        // REMOVE_WHEN_MAINNET
-        // old files don't contain a signature, so we cannot check it
-        // this is just here temporarily to ensure a smooth transistion
-        // as soon as a sufficient number of nodes have upgraded, we can remove this try/catch and declare old files as testnet history
-      }   
-      return String(decrypted)
-   
+    const decrypted_shares = shares.map((data) => {
+      return unpack_share(data, user_key, key_pair)
     })
+
     const combined = secrets.combine(decrypted_shares)
     return Priveos.hex_to_uint8array(combined)
   }
   
   async get_active_nodes(){
-    const res = await this.eos.getTableRows({json:true, scope: this.config.priveosContract, code: this.config.priveosContract,  table: 'nodes', limit:100})
+    const res = await this.eos.getTableRows({json:true, scope: this.config.priveosContract, code: this.config.priveosContract, table: 'nodes', limit:100})
     return res.rows.filter(x => x.is_active)
   }
   
@@ -350,11 +332,10 @@ class Priveos {
         public: this.config.ephemeralKeyPublic,
         private: this.config.ephemeralKeyPrivate,
       }
-    } else {
-      return {
-        public: this.config.publicKey,
-        private: this.config.privateKey,
-      }
+    }
+    return {
+      public: this.config.publicKey,
+      private: this.config.privateKey,
     }
   }
   

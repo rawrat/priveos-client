@@ -1,0 +1,5 @@
+- add bourne json parser
+- add linter
+- exclude tests in dist
+- rogue nodes brechen prozess ab, wenn ein key share ungueltige signatur oder sonstiges hat (neue key shares in dem fall anfordern)
+    - global event (mit subscription)
