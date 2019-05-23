@@ -327,7 +327,7 @@ class Priveos {
    * Return the keys passed when instantiating priveos
    */
   get_config_keys() {
-    if(this.config.ephemeralKeyPublic && this.config.ephemeralKeyPrivate) {
+    if (this.config.ephemeralKeyPublic && this.config.ephemeralKeyPrivate) {
       return {
         public: this.config.ephemeralKeyPublic,
         private: this.config.ephemeralKeyPrivate,
@@ -352,13 +352,13 @@ class Priveos {
 
 // Add some static functions
 
-Priveos.default_threshold_fun = (N) => {
-  return Math.floor(N/2) + 1
+Priveos.default_threshold_fun = n => {
+  return Math.floor(n/2) + 1
 }
-Priveos.hex_to_uint8array = (hex_string) => {
+Priveos.hex_to_uint8array = hex_string => {
   return new Uint8Array(Buffer.from(hex_string, 'hex'))
 }
-Priveos.uint8array_to_hex = (array) => {
+Priveos.uint8array_to_hex = array => {
   return Buffer.from(array).toString('hex')
 }
 
