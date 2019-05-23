@@ -59,5 +59,29 @@ describe("Priveos#read", () => {
       const data = Read.unpack_share(originalShares.data.shares[0], originalShares.data.user_key, ephKeysReader)
       expect(data).toBe("80584a6a30a2539f36117ae00019a0e449eb80715e343d8c1de3da5efb81452804c62424d737679c54a1c2befa56928aa66")
     })
+    test('should throw error when public key is not valid', () => {
+      expect(() => {
+        Read.unpack_share({
+          message: "===",
+          node_key: "x"
+        }, originalShares.data.user_key, ephKeysReader)
+      }).toThrow("AssertionError [ERR_ASSERTION]: Invalid public key")
+    })
+    test('should throw error when message is null object', () => {
+      expect(() => {
+        Read.unpack_share({
+          message: null,
+          node_key: "x"
+        }, originalShares.data.user_key, ephKeysReader)
+      }).toThrow("TypeError [ERR_INVALID_ARG_TYPE]: The first argument must be one of type string, Buffer, ArrayBuffer, Array, or Array-like Object. Received type object")
+    })
+    test('should throw error when cipher is non-sense', () => {
+      expect(() => {
+        Read.unpack_share({
+          message: "===",
+          node_key: "x"
+        }, originalShares.data.user_key, ephKeysReader)
+      }).toThrow("AssertionError [ERR_ASSERTION]: Invalid public key")
+    })
   })
 })
