@@ -1,6 +1,4 @@
-const axios = require('axios')
 const Read = require('./read')
-jest.mock('axios')
 
 const originalShares = {
   data: {
@@ -22,13 +20,6 @@ const originalShares = {
   }
 }
 
-const fakeShare = {
-  "message": "0Z4XL17RN96IAfgECwOBB1YwU0LYWAPZyT6WvwLEb8kZPCp3aSIpC+wFNFh8WHicNnREJQF2VUvk6pwT7ziGeMRVYxdd7T0GbQKeH4hTRvKytP73ConSCGtvtwLVQxd2SOhVXFmwS4zvBeERg7k9K2wmz/jl879W0OVVVPs4yESrN0O/9htH/hWmrk0eDVUwaZUmBG9n6r4Gjmv4fQlPSO363n1rjz4dWoMASPc1i2HFnNjJnyex29JGY5B3wDTz+U1NsOGJXuIhZb1PE0q8tYYYUWMPZSS0C7zN8vDp27L4EGLAQmdJVhnvvT2STSDWtg0rhxfMgqyitrviLo8ylKlE+SCecec=",
-  "node_key": "EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV"
-}
-
-
-
 // privateKey: '5JqvAdD1vQG3MRAsC9RVzdPJxnUCBNVfvRhL7ZmQ7rCqUoMGrnw',
 // publicKey: 'EOS87xyhE6czLCpuF8PaEGc3UiXHHyCMQB2zHygpEsXyDJHadHWFK',
 const ephKeysReader = {
@@ -36,7 +27,6 @@ const ephKeysReader = {
   public: 'EOS82FXAs614bmp7q9s55kyuDCHniATGwxEm4DenDxf1fnVEjVunj'
 }
 
-const fakeShares = originalShares
 
 
 describe("read.js", () => {
