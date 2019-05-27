@@ -298,24 +298,38 @@ class Priveos {
   }
 
   async read(owner, file, txid) {
-    const data = {
-      file: file,
-      requester: owner,
-      dappcontract: this.config.dappContract,
-      txid,
-      timeout_seconds: this.config.timeout_seconds,
-      chainId: this.config.chainId,
-    }
-    const response = await axios.post(this.config.brokerUrl + '/broker/read/', data)
-    const {shares, user_key} = response.data
-    const key_pair = this.get_config_keys()
-    
-    const decrypted_shares = shares.map((data) => {
-      return unpack_share(data, user_key, key_pair)
-    })
+    let tries = 0
+    const max_tries = 5
+    let inc_threshold = 0
+    let success = false
 
-    const combined = secrets.combine(decrypted_shares)
-    return Priveos.hex_to_uint8array(combined)
+    while (success === false) {
+      tries++
+      const data = {
+        file: file,
+        requester: owner,
+        dappcontract: this.config.dappContract,
+        txid,
+        timeout_seconds: this.config.timeout_seconds,
+        chainId: this.config.chainId,
+      }
+
+      if (inc_threshold) data.inc_threshold = inc_threshold
+
+      const response = await axios.post(this.config.brokerUrl + '/broker/read/', data)
+      const {shares, user_key} = response.data
+      const key_pair = this.get_config_keys()
+      try {
+        const decrypted_shares = shares.map((data) => {
+          return unpack_share(data, user_key, key_pair)
+        })
+        const combined = secrets.combine(decrypted_shares)
+        return Priveos.hex_to_uint8array(combined)
+      } catch(e) {
+        inc_threshold++
+        if (tries >= max_tries) throw new Error(`Max retries (${tries}) exceeded`)
+      }
+    }
   }
   
   async get_active_nodes(){

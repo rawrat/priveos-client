@@ -125,6 +125,7 @@ axios.post.mockResolvedValue(originalShares)
 describe("Priveos", () => {
   let priveos = null
   beforeEach(() => {
+    jest.clearAllMocks()
     priveos = new Priveos({
       privateKey: '5JHBkNSdn5QFnXVNi9RTTVFvSafk4A8B99oVKANbue1RZseKpwt',
       publicKey: 'EOS82FXAs614bmp7q9s55kyuDCHniATGwxEm4DenDxf1fnVEjVunj',
@@ -136,9 +137,35 @@ describe("Priveos", () => {
   })
 
   describe("#read", () => {
-    test('should throw error when cipher is non-sense', async () => {
+    test('should return correct Uint8Array with key when reading was successful', async () => {
       const result = await priveos.read("owner", "file_id", "tx_id")
       expect(result).toEqual(new Uint8Array([7,197,89,245,11,154,56,255,28,179,39,92,182,51,245,101,2,110,88,103,234,230,147,134,44,34,236,153,71,55,154,40]))
+    })
+    describe("on decryption or signature error", () => {
+      test('should refetch shares with increased threshold on error', async () => {
+        let invalidShares = originalShares
+        invalidShares.data.shares[0].message = "xxx"
+        axios.post.mockResolvedValue(invalidShares)
+        try {
+          await priveos.read("owner", "file_id", "tx_id")
+        }catch(e){}
+        expect(axios.post.mock.calls[1][1].inc_threshold).toBeDefined()
+      })
+      test('should at most call broker 3 times to get valid shares', async () => {
+        let invalidShares = originalShares
+        invalidShares.data.shares[0].message = "xxx"
+        axios.post.mockResolvedValue(invalidShares)
+        try {
+          await priveos.read("owner", "file_id", "tx_id")
+        }catch(e){}
+        expect(axios.post.mock.calls.length).toEqual(5)
+      })
+      test('should throw error when after max retries the shares cannot be fetched', async () => {
+        let invalidShares = originalShares
+        invalidShares.data.shares[0].message = "xxx"
+        axios.post.mockResolvedValue(invalidShares)
+        expect(priveos.read("owner", "file_id", "tx_id")).rejects.toEqual(new Error("Max retries (5) exceeded"))
+      })
     })
   })
 })

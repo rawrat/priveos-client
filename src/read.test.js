@@ -65,8 +65,8 @@ describe("read.js", () => {
         }, originalShares.data.user_key, ephKeysReader)
       }).toThrow("TypeError [ERR_INVALID_ARG_TYPE]: The first argument must be one of type string, Buffer, ArrayBuffer, Array, or Array-like Object. Received type object")
     })
-    test('should throw error when cipher is non-sense', () => {
-      expect(() => {
+    test('should throw error when cipher is non-sense', function() {
+      expect(function() {
         Read.unpack_share({
           message: "===",
           node_key: "x"
