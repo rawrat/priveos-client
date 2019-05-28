@@ -66,7 +66,7 @@ describe("Constructor initialization", () => {
       chainId: 123
     })).toThrow(TypeError("No httpEndpoint given"))
   })
-  test('requires hooks to be object not array', () => {
+  test('requires hooks to be instanceof EventTarget', () => {
     expect(() => new Priveos({
       privateKey: 123,
       publicKey: 123,
@@ -77,7 +77,7 @@ describe("Constructor initialization", () => {
       chainId: 123,
       httpEndpoint: 'https://123456789abcdefghijklmnop',
       hooks: []
-    })).toThrow(TypeError("Hooks must be object not array"))
+    })).toThrow(TypeError("Hooks must be instanceof EventTarget"))
   })
   test('initializes correctly with all required values', () => {
     expect(() => new Priveos({
@@ -92,6 +92,7 @@ describe("Constructor initialization", () => {
     })).not.toThrow()
   })
   test('initializes correctly with hooks', () => {
+    const myEmitter = new EventTarget()
     expect(() => new Priveos({
       privateKey: 123,
       publicKey: 123,
@@ -101,9 +102,7 @@ describe("Constructor initialization", () => {
       brokerUrl: 123,
       chainId: "3a953df32658a2c7ef97c4048acb255969e803dafd92b96755bbc90ce4d1e448",
       httpEndpoint: 'https://123456789abcdefghijklmnop',
-      hooks: {
-        test1: () => console.log('test')
-      }
+      hooks: myEmitter
     })).not.toThrow()
   })
 })
