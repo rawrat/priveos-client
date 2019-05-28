@@ -103,21 +103,12 @@ const originalShares = {
   }
 }
 
-const fakeShare = {
-  "message": "0Z4XL17RN96IAfgECwOBB1YwU0LYWAPZyT6WvwLEb8kZPCp3aSIpC+wFNFh8WHicNnREJQF2VUvk6pwT7ziGeMRVYxdd7T0GbQKeH4hTRvKytP73ConSCGtvtwLVQxd2SOhVXFmwS4zvBeERg7k9K2wmz/jl879W0OVVVPs4yESrN0O/9htH/hWmrk0eDVUwaZUmBG9n6r4Gjmv4fQlPSO363n1rjz4dWoMASPc1i2HFnNjJnyex29JGY5B3wDTz+U1NsOGJXuIhZb1PE0q8tYYYUWMPZSS0C7zN8vDp27L4EGLAQmdJVhnvvT2STSDWtg0rhxfMgqyitrviLo8ylKlE+SCecec=",
-  "node_key": "EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV"
-}
-
-
-
 // privateKey: '5JqvAdD1vQG3MRAsC9RVzdPJxnUCBNVfvRhL7ZmQ7rCqUoMGrnw',
 // publicKey: 'EOS87xyhE6czLCpuF8PaEGc3UiXHHyCMQB2zHygpEsXyDJHadHWFK',
 const ephKeysReader = {
   private: '5JHBkNSdn5QFnXVNi9RTTVFvSafk4A8B99oVKANbue1RZseKpwt',
   public: 'EOS82FXAs614bmp7q9s55kyuDCHniATGwxEm4DenDxf1fnVEjVunj'
 }
-
-const fakeShares = originalShares
 
 
 axios.post.mockResolvedValue(originalShares)
@@ -137,34 +128,36 @@ describe("Priveos", () => {
   })
 
   describe("#read", () => {
-    test('should return correct Uint8Array with key when reading was successful', async () => {
-      const result = await priveos.read("owner", "file_id", "tx_id")
-      expect(result).toEqual(new Uint8Array([7,197,89,245,11,154,56,255,28,179,39,92,182,51,245,101,2,110,88,103,234,230,147,134,44,34,236,153,71,55,154,40]))
-    })
     describe("on decryption or signature error", () => {
-      test('should refetch shares with increased threshold on error', async () => {
-        let invalidShares = originalShares
+      beforeEach(() => {
+        let invalidShares = JSON.parse(JSON.stringify(originalShares))
         invalidShares.data.shares[0].message = "xxx"
         axios.post.mockResolvedValue(invalidShares)
+      })
+      test('should refetch shares with increased threshold on error', async () => {
         try {
           await priveos.read("owner", "file_id", "tx_id")
         }catch(e){}
         expect(axios.post.mock.calls[1][1].inc_threshold).toBeDefined()
       })
       test('should at most call broker 3 times to get valid shares', async () => {
-        let invalidShares = originalShares
-        invalidShares.data.shares[0].message = "xxx"
-        axios.post.mockResolvedValue(invalidShares)
         try {
           await priveos.read("owner", "file_id", "tx_id")
         }catch(e){}
         expect(axios.post.mock.calls.length).toEqual(5)
       })
       test('should throw error when after max retries the shares cannot be fetched', async () => {
-        let invalidShares = originalShares
-        invalidShares.data.shares[0].message = "xxx"
-        axios.post.mockResolvedValue(invalidShares)
         expect(priveos.read("owner", "file_id", "tx_id")).rejects.toEqual(new Error("Max retries (5) exceeded"))
+      })
+    })
+    describe("on valid response", () => {
+      beforeEach(() => {
+        axios.post.mockResolvedValue(originalShares)
+      })
+      test('should correctly return Uint8Array', async () => {
+        axios.post.mockResolvedValue(originalShares)
+        const result = await priveos.read("owner", "file_id", "tx_id")
+        expect(result).toEqual(new Uint8Array([7,197,89,245,11,154,56,255,28,179,39,92,182,51,245,101,2,110,88,103,234,230,147,134,44,34,236,153,71,55,154,40]))
       })
     })
   })

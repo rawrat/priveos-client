@@ -326,6 +326,7 @@ class Priveos {
         const combined = secrets.combine(decrypted_shares)
         return Priveos.hex_to_uint8array(combined)
       } catch(e) {
+        // console.log('e', e)
         inc_threshold++
         if (tries >= max_tries) throw new Error(`Max retries (${tries}) exceeded`)
       }

@@ -10,7 +10,7 @@ export function unpack_share(share, ownerPubKey, readerKeyPair) {
         assert(eosjs_ecc_priveos.verify(signature, message, ownerPubKey), `Node ${share.node_key}: Invalid signature. Data is not signed by ${ownerPubKey}.`)
         return message
     } catch(e) {
-        throw new Error(e)
+        throw new Error(e) // TODO remove this line for backwards compatibility in client (see lines below)
         // old format (v0.1.4 and lower)
         // REMOVE_WHEN_MAINNET
         // old files don't contain a signature, so we cannot check it
