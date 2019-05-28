@@ -30,6 +30,8 @@ class Priveos {
     if (!config.chainId) throw new TypeError('No chainId given')
     if (!config.brokerUrl) throw new TypeError('No brokerUrl given')
     if (!config.httpEndpoint) throw new TypeError('No httpEndpoint given')
+    if (config.hooks && (Array.isArray(config.hooks) || typeof config.hooks !== 'object')) throw new Error('Hooks must be object not array')
+    if (!config.hooks) config.hooks = {}
     
     this.config = config
 
