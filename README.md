@@ -1,5 +1,4 @@
 # PrivEOS-Client
-
 This is the javascript client library that makes it easy to integrate privEOS into your application.
 
 ## Installation
@@ -7,9 +6,7 @@ This is the javascript client library that makes it easy to integrate privEOS in
     npm install priveos --save
     
 ## Usage
-
 In order to get up to speed in developing with privEOS, please see our [getting started guide](https://github.com/rawrat/priveos-client/wiki/Getting-started).
-
 You can also take a look at our example applications:
 
 * [Squeakr](https://github.com/rawrat/squeakr/): Decentralised Private Twitter
