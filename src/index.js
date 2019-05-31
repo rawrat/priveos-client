@@ -30,7 +30,7 @@ class Priveos {
     if (!config.chainId) throw new TypeError('No chainId given')
     if (!config.brokerUrl) throw new TypeError('No brokerUrl given')
     if (!config.httpEndpoint) throw new TypeError('No httpEndpoint given')
-    if (config.hooks && !(config.hooks instanceof EventTarget)) throw new Error('Hooks must be instanceof EventTarget')
+    if (config.hooks && !(typeof config.hooks === "object" && !Array.isArray(config.hooks))) throw new Error('Hooks must be object with keys')
     if (!config.hooks) config.hooks = {}
     
     this.config = config
@@ -301,8 +301,8 @@ class Priveos {
 
   async read(owner, file, txid) {
     let tries = 0
-    const max_tries = 5
-    let inc_threshold = 0
+    const max_tries = 5 // the max amount of requests to broker before aborting the read process
+    let inc_threshold = 0 // counter for an increased threshold
     let success = false
 
     while (success === false) {
@@ -316,6 +316,7 @@ class Priveos {
         chainId: this.config.chainId,
       }
 
+      // on decryption errors we want the retry to have an increased threshold
       if (inc_threshold) data.inc_threshold = inc_threshold
 
       const response = await axios.post(this.config.brokerUrl + '/broker/read/', data)
@@ -328,7 +329,7 @@ class Priveos {
         const combined = secrets.combine(decrypted_shares)
         return Priveos.hex_to_uint8array(combined)
       } catch(e) {
-        // console.log('e', e)
+        this.dispatch("decryption_error", {})
         inc_threshold++
         if (tries >= max_tries) throw new Error(`Max retries (${tries}) exceeded`)
       }
@@ -363,6 +364,13 @@ class Priveos {
       if(process && process.exit) {
         process.exit(1)        
       }
+    }
+  }
+
+  // trigger a hook set by config from dapp
+  async dispatch(name, data) {
+    if (typeof this.config.hooks[name] === "function") {
+      return this.config.hooks[name](data)
     }
   }
 }

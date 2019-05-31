@@ -8,7 +8,8 @@
     "build_browser": "webpack --config webpack.browser.js",
     "prePublish": "npm run build_node && npm run build_browser",
     "test": "jest",
-    "testWatch": "jest --watch"
+    "test_watch": "jest --watch",
+		"example": "npm run build_node && node dist/node/example.js"
   },
   "author": "",
   "license": "ISC",

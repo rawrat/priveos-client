@@ -66,7 +66,7 @@ describe("Constructor initialization", () => {
       chainId: 123
     })).toThrow(TypeError("No httpEndpoint given"))
   })
-  test('requires hooks to be instanceof EventTarget', () => {
+  test('requires hooks to be object with keys', () => {
     expect(() => new Priveos({
       privateKey: 123,
       publicKey: 123,
@@ -77,7 +77,7 @@ describe("Constructor initialization", () => {
       chainId: 123,
       httpEndpoint: 'https://123456789abcdefghijklmnop',
       hooks: []
-    })).toThrow(TypeError("Hooks must be instanceof EventTarget"))
+    })).toThrow(TypeError("Hooks must be object with keys"))
   })
   test('initializes correctly with all required values', () => {
     expect(() => new Priveos({
@@ -142,7 +142,11 @@ axios.post.mockResolvedValue(originalShares)
 
 describe("Priveos", () => {
   let priveos = null
+  let hooks = {}
   beforeEach(() => {
+    hooks = {
+      decryption_error: jest.fn()
+    }
     jest.clearAllMocks()
     priveos = new Priveos({
       privateKey: '5JHBkNSdn5QFnXVNi9RTTVFvSafk4A8B99oVKANbue1RZseKpwt',
@@ -150,7 +154,8 @@ describe("Priveos", () => {
       dappContract: 123,
       brokerUrl: 123,
       chainId: "3a953df32658a2c7ef97c4048acb255969e803dafd92b96755bbc90ce4d1e448",
-      httpEndpoint: 'https://123456789abcdefghijklmnop'
+      httpEndpoint: 'https://123456789abcdefghijklmnop',
+      hooks
     })
   })
 
@@ -175,6 +180,12 @@ describe("Priveos", () => {
       })
       test('should throw error when after max retries the shares cannot be fetched', async () => {
         expect(priveos.read("owner", "file_id", "tx_id")).rejects.toEqual(new Error("Max retries (5) exceeded"))
+      })
+      test('should call hook to notify dapp', async () => {
+        try {
+          await priveos.read("owner", "file_id", "tx_id")
+        } catch(e) {}
+        expect(hooks.decryption_error.mock.calls.length).toEqual(5)
       })
     })
     describe("on valid response", () => {
