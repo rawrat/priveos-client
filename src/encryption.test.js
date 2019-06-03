@@ -1,7 +1,6 @@
 const { generateKey, encrypt, decrypt, unpack_share } = require('./encryption')
 const {
   decodeUTF8,
-  encodeUTF8,
 } = require("tweetnacl-util")
 
 test('normal strings', () => {

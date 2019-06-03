@@ -1,12 +1,13 @@
 'use strict'
-
 const assert = require('assert')
 const Priveos = require('./index')
+const log = require('loglevel')
 var config
+
 try {
   config = require('./config-test').default
 } catch(e) {
-  console.log("config-test.js not found. Please copy config-test.js-example to config-test.js and modify to your needs")
+  log.error("config-test.js not found. Please copy config-test.js-example to config-test.js and modify to your needs")
   process.exit(1)
 }
 import uuidv4 from 'uuid/v4'
@@ -47,32 +48,32 @@ async function test() {
     // This transaction will fail if he is not authorised.
 
   const key = Priveos.encryption.generateKey()
-  console.log("Calling priveos_alice.store")
+  log.info("Calling priveos_alice.store")
   const transaction_data = await priveos_alice.store(alice, file, key)
-  console.log("Successfully stored file. Transaction id: ", transaction_data.transaction_id)
+  log.info("Successfully stored file. Transaction id: ", transaction_data.transaction_id)
   // throw new Error("ABORT NOW")
   // process.exit(1)
-  console.log(`Successfully stored file (${file}), now off to reading.`)
+  log.info(`Successfully stored file (${file}), now off to reading.`)
   
   // Bob requests access to the file. 
   // This transaction will fail if he is not authorised.
-  console.log(`Push accessgrant action for user ${bob}, contract ${priveos_bob.config.dappContract}, file ${file} and public key ${priveos_bob.config.ephemeralKeyPublic}`)
+  log.info(`Push accessgrant action for user ${bob}, contract ${priveos_bob.config.dappContract}, file ${file} and public key ${priveos_bob.config.ephemeralKeyPublic}`)
   const txid = await priveos_bob.accessgrant(bob, file)
-  console.log(`\r\nWaiting for transaction to finish`)  
-  console.log("Accessgrant txid: ", txid)
+  log.info(`\r\nWaiting for transaction to finish`)  
+  log.info("Accessgrant txid: ", txid)
   
   // no delay needed between accessgrant and read
 
-  console.log("Calling riveos_bob.read(bob, file)")
+  log.info("Calling riveos_bob.read(bob, file)")
   const recovered_key = await priveos_bob.read(bob, file, txid)
-  console.log("priveos_bob.read(bob, file) succeeded")
-  // console.log('Y: ', y)
+  log.info("priveos_bob.read(bob, file) succeeded")
+  // log.info('Y: ', y)
 
-  console.log("Original key: ", key)
-  console.log("Reconstructed key: ", recovered_key)
+  log.info("Original key: ", key)
+  log.info("Reconstructed key: ", recovered_key)
   
   assert.deepStrictEqual(key, recovered_key)
   
-  console.log("Success!")
+  log.info("Success!")
 }
 test()

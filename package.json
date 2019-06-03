@@ -9,6 +9,7 @@
     "prePublish": "npm run build_node && npm run build_browser",
     "test": "jest",
     "test_watch": "jest --watch",
+		"lint": "./node_modules/.bin/eslint src",
     "example": "npm run build_node && node dist/node/example.js"
   },
   "author": "",
@@ -33,6 +34,7 @@
     "@babel/plugin-transform-runtime": "^7.2.0",
     "@babel/preset-env": "^7.3.1",
     "babel-jest": "^24.8.0",
+    "eslint": "^5.16.0",
     "jest": "^24.0.0",
     "proxyquire": "^2.1.0",
     "uuid": "^3.3.2",

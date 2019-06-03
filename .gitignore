@@ -1,4 +1,4 @@
-/config-test.js
+src/config-test.js
 /node_modules
 /yarn-error.log
 /dist

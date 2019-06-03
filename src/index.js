@@ -180,7 +180,7 @@ class Priveos {
     log.debug("Calling /broker/store/ for hash ", hash)
     log.info("Submitting the following data to broker: ", JSON.stringify(data, null, 2))
     const url = this.config.brokerUrl + '/broker/store/'
-    const response = await axios.post(url, {
+    await axios.post(url, {
       file: file,
       data: JSON.stringify(data),
       owner: owner,
@@ -360,7 +360,7 @@ class Priveos {
   async check_chain_id() {
     const info = await this.eos.getInfo({})
     if(info.chain_id != this.config.chainId) {
-      console.error(`Error: Chain ID is configured to be "${this.config.chainId}" but is "${info.chain_id}"`)
+      log.error(`Error: Chain ID is configured to be "${this.config.chainId}" but is "${info.chain_id}"`)
       if(process && process.exit) {
         process.exit(1)        
       }
