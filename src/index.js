@@ -6,7 +6,7 @@ const eosjs_ecc_priveos = require('eosjs-ecc-priveos')
 const Eos = require('eosjs')
 const getMultiHash = require('./multihash')
 const { Symbol, Asset } = require('./types')
-import { unpack_share } from './read'
+import { unpack_share } from './encryption'
 
 const log = require('loglevel')
 

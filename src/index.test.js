@@ -107,8 +107,6 @@ describe("Constructor initialization", () => {
   })
 })
 
-
-
 jest.mock('axios')
 const originalShares = {
   data: {
