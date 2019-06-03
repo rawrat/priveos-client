@@ -1,5 +1,5 @@
 # PrivEOS-Client
-Priveos javascript client library to integrate the priveos node system into your application.
+Priveos javascript client library to integrate the Priveos Private Data Access Layer into your application. For more information see [https://www.slant.li/priveos/](https://www.slant.li/priveos/).
 
 ## Installation
 
