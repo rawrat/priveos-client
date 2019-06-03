@@ -38,7 +38,7 @@ To run the unit tests:
     yarn test
 
 ### Example.js
-The example.js contains the basic workflow to generate a encryption key, store that encryption on the network and retreive it later. It requires a config file. The commands below are based on a working `babel-node` installation. Alternatively you can also build first and execute the test by running:
+The example.js contains the basic workflow to generate a encryption key, store that encryption on the network and retreive it later. It requires a config file (see `./src/config-test.js-example`). The commands below are based on a working `babel-node` installation. Alternatively you can also build first and execute the test by running:
 
     yarn example
 
@@ -48,3 +48,6 @@ The example.js contains the basic workflow to generate a encryption key, store t
 
 ### Lint
     yarn lint
+
+### Browser
+There's an example browser JS implementation at `/test.html`.
