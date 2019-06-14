@@ -176,7 +176,8 @@ class Priveos {
     const hash = await getMultiHash(buffer)
     log.debug("Calling /broker/store/ for hash ", hash)
     log.info("Submitting the following data to broker: ", JSON.stringify(data, null, 2))
-    const url = this.config.brokerUrl + '/broker/store/'
+    const url = new URL('/broker/store/', this.config.brokerUrl).href
+    
     const response = await axios.post(url, {
       file: file,
       data: JSON.stringify(data),
@@ -305,7 +306,8 @@ class Priveos {
       timeout_seconds: this.config.timeout_seconds,
       chainId: this.config.chainId,
     }
-    const response = await axios.post(this.config.brokerUrl + '/broker/read/', data)
+    const url = new URL('/broker/read/', this.config.brokerUrl).href
+    const response = await axios.post(url, data)
     const {shares, user_key} = response.data
     const read_key = this.get_config_keys()
     
