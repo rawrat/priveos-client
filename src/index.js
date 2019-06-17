@@ -90,7 +90,7 @@ class Priveos {
     if (nodes.length == 0) {
       const msg = "No nodes available on priveos network."
       log.error(msg)
-      return new Error(msg)
+      throw msg
     }
     log.debug("\r\nNodes: ", nodes)
 

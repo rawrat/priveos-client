@@ -2127,10 +2127,10 @@ eosjs-api@7.0.4:
     camel-case "^3.0.0"
     isomorphic-fetch "^2.2.1"
 
-eosjs-ecc-priveos@^4.0.5:
-  version "4.0.5"
-  resolved "https://registry.yarnpkg.com/eosjs-ecc-priveos/-/eosjs-ecc-priveos-4.0.5.tgz#6b1c7128bee12731e20afb8286152d29ca6b1eb0"
-  integrity sha512-enz6deUOdq44OPf5cuMrCM9WaduvzaZ+Z7hxaAvbkxT3n6x5EUmCOWe3WLZDjpBUokmUSC9xrFwrJLMu9z8idQ==
+eosjs-ecc-priveos@^4.0.6:
+  version "4.0.6"
+  resolved "https://registry.yarnpkg.com/eosjs-ecc-priveos/-/eosjs-ecc-priveos-4.0.6.tgz#9e779f860b5ff189a98bdb7f24c831f68b5e1624"
+  integrity sha512-3vWrLPjKi559WR7k+0U0utU3vzQdvDFz6saEYNAgJA+OkptQ5ihvznsC89NwrPLIXVw58IGOH/i3y/zzaUCwaA==
   dependencies:
     bigi "^1.4.2"
     bs58 "^4.0.1"
@@ -2138,6 +2138,7 @@ eosjs-ecc-priveos@^4.0.5:
     create-hmac "^1.1.6"
     ecurve "^1.0.5"
     randombytes "^2.0.5"
+    terser "^4.0.0"
     tweetnacl "^1.0.1"
 
 eosjs-ecc@4.0.4:
@@ -5456,6 +5457,15 @@ terser@^3.16.1:
   version "3.17.0"
   resolved "https://registry.yarnpkg.com/terser/-/terser-3.17.0.tgz#f88ffbeda0deb5637f9d24b0da66f4e15ab10cb2"
   integrity sha512-/FQzzPJmCpjAH9Xvk2paiWrFq+5M6aVOf+2KRbwhByISDX/EujxsK+BAvrhb6H+2rtrLCHK9N01wO014vrIwVQ==
+  dependencies:
+    commander "^2.19.0"
+    source-map "~0.6.1"
+    source-map-support "~0.5.10"
+
+terser@^4.0.0:
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/terser/-/terser-4.0.0.tgz#ef356f6f359a963e2cc675517f21c1c382877374"
+  integrity sha512-dOapGTU0hETFl1tCo4t56FN+2jffoKyER9qBGoUFyZ6y7WLoKT0bF+lAYi6B6YsILcGF3q1C2FBh8QcKSCgkgA==
   dependencies:
     commander "^2.19.0"
     source-map "~0.6.1"
