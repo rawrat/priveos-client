@@ -32,7 +32,7 @@ export class Asset {
       this.amount = parseFloat(number)
           
       let precision  
-      const [_, digits] = number.split('.') 
+      const [, digits] = number.split('.') 
       if(!digits) {
         precision = 0
       } else {
@@ -42,8 +42,8 @@ export class Asset {
       this.symbol = new Symbol(name, precision)
       
     } else {
-    this.amount = a
-    this.symbol = b      
+      this.amount = a
+      this.symbol = b
     }
   }
   

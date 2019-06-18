@@ -6,6 +6,7 @@ const eosjs_ecc_priveos = require('eosjs-ecc-priveos')
 const Eos = require('eosjs')
 const getMultiHash = require('./multihash')
 const { Symbol, Asset } = require('./types')
+import { unpack_share } from './encryption'
 
 const log = require('loglevel')
 
@@ -21,30 +22,32 @@ function add_defaults(options) {
 
 class Priveos {
   constructor(config) {
-    if (!config) throw new Error('Instantiating Priveos requires config object')
-    if (!config.privateKey && !config.eos) throw new Error('Instantiating Priveos requires either config.privateKey or config.eos proxy instance (e.g. scatter)')
-    if (config.privateKey && !config.publicKey) throw new Error('When passing config.privateKey the related config.publicKey must be present too')
-    if (config.ephemeralKeyPrivate && !config.ephemeralKeyPublic) throw new Error('When passing config.ephemeralKeyPrivate the related config.ephemeralKeyPublic must be present too')
-    if (!config.dappContract) throw new Error('Instantiating Priveos requires a dappContract set')
-    if (!config.chainId) throw new Error('No chainId given')
-    if (!config.brokerUrl) throw new Error('No brokerUrl given')
-    if (!config.httpEndpoint) throw new Error('No httpEndpoint give')
+    if (typeof config !== "object" || config === null) throw new TypeError('No config given')
+    if (!config.privateKey && !config.eos) throw new TypeError('None of privateKey or eos instance given')
+    if (config.privateKey && !config.publicKey) throw new TypeError('privateKey without publicKey given')
+    if (config.ephemeralKeyPrivate && !config.ephemeralKeyPublic) throw new TypeError('ephemeralKeyPrivate but no ephemeralKeyPublic given')
+    if (!config.dappContract) throw new TypeError('No dappContract given')
+    if (!config.chainId) throw new TypeError('No chainId given')
+    if (!config.brokerUrl) throw new TypeError('No brokerUrl given')
+    if (!config.httpEndpoint) throw new TypeError('No httpEndpoint given')
+    if (config.hooks && !(typeof config.hooks === "object" && !Array.isArray(config.hooks))) throw new Error('Hooks must be object with keys')
+    if (!config.hooks) config.hooks = {}
     
     this.config = config
 
-    if(this.config.threshold_fun) {
+    if (this.config.threshold_fun) {
       this.threshold_fun = this.config.threshold_fun
     } else {
       this.threshold_fun = Priveos.default_threshold_fun
     }
     
-    if(this.config.auditable) {
+    if (this.config.auditable) {
       this.auditable = 1
     } else {
       this.auditable = 0
     }
     
-    if(this.config.contractpays) {
+    if (this.config.contractpays) {
       this.contractpays = 1
     } else {
       this.contractpays = 0
@@ -177,8 +180,7 @@ class Priveos {
     log.debug("Calling /broker/store/ for hash ", hash)
     log.info("Submitting the following data to broker: ", JSON.stringify(data, null, 2))
     const url = new URL('/broker/store/', this.config.brokerUrl).href
-    
-    const response = await axios.post(url, {
+    await axios.post(url, {
       file: file,
       data: JSON.stringify(data),
       owner: owner,
@@ -276,13 +278,13 @@ class Priveos {
   }
   
   async get_read_fee(token) {
-    const res = await this.eos.getTableRows({json:true, scope: 'priveosrules', code: 'priveosrules',  table: 'readprice', limit:1, lower_bound: token.name})
+    const res = await this.eos.getTableRows({json:true, scope: 'priveosrules', code: 'priveosrules', table: 'readprice', limit:1, lower_bound: token.name})
     log.debug('get_priveos_fee: ', res.rows[0].money)
     return new Asset(res.rows[0].money)
   }
   
   async get_store_fee(token) {
-    const res = await this.eos.getTableRows({json:true, scope: 'priveosrules', code: 'priveosrules',  table: 'storeprice', limit:1, lower_bound: token.name})
+    const res = await this.eos.getTableRows({json:true, scope: 'priveosrules', code: 'priveosrules', table: 'storeprice', limit:1, lower_bound: token.name})
     log.debug('get_priveos_fee: ', res.rows[0].money)
     return new Asset(res.rows[0].money)
   }
@@ -290,7 +292,7 @@ class Priveos {
   async get_user_balance(user, token) {
     const res = await this.eos.getTableRows({json:true, scope: user, code: 'priveosrules',  table: 'balances', limit:1})
     const bal = res.rows[0]
-    if(bal) {
+    if (bal) {
       return new Asset(bal.funds)
     } else {
       return new Asset(0, token)
@@ -298,44 +300,45 @@ class Priveos {
   }
 
   async read(owner, file, txid) {
-    const data = {
-      file: file,
-      requester: owner,
-      dappcontract: this.config.dappContract,
-      txid,
-      timeout_seconds: this.config.timeout_seconds,
-      chainId: this.config.chainId,
-    }
-    const url = new URL('/broker/read/', this.config.brokerUrl).href
-    const response = await axios.post(url, data)
-    const {shares, user_key} = response.data
-    const read_key = this.get_config_keys()
-    
-    const decrypted_shares = shares.map((data) => { 
-      console.log("data: ", JSON.stringify(data, null, 2))     
-      const decrypted = eosjs_ecc_priveos.Aes.decrypt(read_key.private, data.node_key, Buffer.from(data.message, 'base64'))
-      console.log("decrypted: ", String(decrypted))
+    let tries = 0
+    const max_tries = 5 // the max amount of requests to broker before aborting the read process
+    let inc_threshold = 0 // counter for an increased threshold
+    let success = false
+
+    while (success === false) {
+      tries++
+      const data = {
+        file: file,
+        requester: owner,
+        dappcontract: this.config.dappContract,
+        txid,
+        timeout_seconds: this.config.timeout_seconds,
+        chainId: this.config.chainId,
+      }
+
+      // on decryption errors we want the retry to have an increased threshold
+      if (inc_threshold) data.inc_threshold = inc_threshold
+
+      const url = new URL('/broker/read/', this.config.brokerUrl).href
+      const response = await axios.post(url, data)
+      const {shares, user_key} = response.data
+      const key_pair = this.get_config_keys()
       try {
-        const {s: signature, m: message} = JSON.parse(decrypted)
-      
-        assert(eosjs_ecc_priveos.verify(signature, message, user_key), `Node ${data.node_key}: Invalid signature. Data is not signed by ${user_key}.`)
-        return message
+        const decrypted_shares = shares.map((data) => {
+          return unpack_share(data, user_key, key_pair)
+        })
+        const combined = secrets.combine(decrypted_shares)
+        return Priveos.hex_to_uint8array(combined)
       } catch(e) {
-        // old format (v0.1.4 and lower)
-        // REMOVE_WHEN_MAINNET
-        // old files don't contain a signature, so we cannot check it
-        // this is just here temporarily to ensure a smooth transistion
-        // as soon as a sufficient number of nodes have upgraded, we can remove this try/catch and declare old files as testnet history
-      }   
-      return String(decrypted)
-   
-    })
-    const combined = secrets.combine(decrypted_shares)
-    return Priveos.hex_to_uint8array(combined)
+        this.dispatch("decryption_error", {})
+        inc_threshold++
+        if (tries >= max_tries) throw new Error(`Max retries (${tries}) exceeded`)
+      }
+    }
   }
   
   async get_active_nodes(){
-    const res = await this.eos.getTableRows({json:true, scope: this.config.priveosContract, code: this.config.priveosContract,  table: 'nodes', limit:100})
+    const res = await this.eos.getTableRows({json:true, scope: this.config.priveosContract, code: this.config.priveosContract, table: 'nodes', limit:100})
     return res.rows.filter(x => x.is_active)
   }
   
@@ -343,39 +346,45 @@ class Priveos {
    * Return the keys passed when instantiating priveos
    */
   get_config_keys() {
-    if(this.config.ephemeralKeyPublic && this.config.ephemeralKeyPrivate) {
+    if (this.config.ephemeralKeyPublic && this.config.ephemeralKeyPrivate) {
       return {
         public: this.config.ephemeralKeyPublic,
         private: this.config.ephemeralKeyPrivate,
       }
-    } else {
-      return {
-        public: this.config.publicKey,
-        private: this.config.privateKey,
-      }
+    }
+    return {
+      public: this.config.publicKey,
+      private: this.config.privateKey,
     }
   }
   
   async check_chain_id() {
     const info = await this.eos.getInfo({})
     if(info.chain_id != this.config.chainId) {
-      console.error(`Error: Chain ID is configured to be "${this.config.chainId}" but is "${info.chain_id}"`)
+      log.error(`Error: Chain ID is configured to be "${this.config.chainId}" but is "${info.chain_id}"`)
       if(process && process.exit) {
         process.exit(1)        
       }
+    }
+  }
+
+  // trigger a hook set by config from dapp
+  async dispatch(name, data) {
+    if (typeof this.config.hooks[name] === "function") {
+      return this.config.hooks[name](data)
     }
   }
 }
 
 // Add some static functions
 
-Priveos.default_threshold_fun = (N) => {
-  return Math.floor(N/2) + 1
+Priveos.default_threshold_fun = n => {
+  return Math.floor(n/2) + 1
 }
-Priveos.hex_to_uint8array = (hex_string) => {
+Priveos.hex_to_uint8array = hex_string => {
   return new Uint8Array(Buffer.from(hex_string, 'hex'))
 }
-Priveos.uint8array_to_hex = (array) => {
+Priveos.uint8array_to_hex = array => {
   return Buffer.from(array).toString('hex')
 }
 
