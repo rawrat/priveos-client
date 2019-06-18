@@ -93,7 +93,7 @@ class Priveos {
     if (nodes.length == 0) {
       const msg = "No nodes available on priveos network."
       log.error(msg)
-      return new Error(msg)
+      throw msg
     }
     log.debug("\r\nNodes: ", nodes)
 
@@ -179,7 +179,7 @@ class Priveos {
     const hash = await getMultiHash(buffer)
     log.debug("Calling /broker/store/ for hash ", hash)
     log.info("Submitting the following data to broker: ", JSON.stringify(data, null, 2))
-    const url = this.config.brokerUrl + '/broker/store/'
+    const url = new URL('/broker/store/', this.config.brokerUrl).href
     await axios.post(url, {
       file: file,
       data: JSON.stringify(data),
@@ -319,7 +319,8 @@ class Priveos {
       // on decryption errors we want the retry to have an increased threshold
       if (inc_threshold) data.inc_threshold = inc_threshold
 
-      const response = await axios.post(this.config.brokerUrl + '/broker/read/', data)
+      const url = new URL('/broker/read/', this.config.brokerUrl).href
+      const response = await axios.post(url, data)
       const {shares, user_key} = response.data
       const key_pair = this.get_config_keys()
       try {
