@@ -312,23 +312,11 @@ class Priveos {
     const read_key = this.get_config_keys()
     
     const decrypted_shares = shares.map((data) => { 
-      console.log("data: ", JSON.stringify(data, null, 2))     
+      log.debug("data: ", JSON.stringify(data, null, 2))     
       const decrypted = eosjs_ecc_priveos.Aes.decrypt(read_key.private, data.node_key, Buffer.from(data.message, 'base64'))
-      console.log("decrypted: ", String(decrypted))
-      try {
-        const {s: signature, m: message} = JSON.parse(decrypted)
-      
-        assert(eosjs_ecc_priveos.verify(signature, message, user_key), `Node ${data.node_key}: Invalid signature. Data is not signed by ${user_key}.`)
-        return message
-      } catch(e) {
-        // old format (v0.1.4 and lower)
-        // REMOVE_WHEN_MAINNET
-        // old files don't contain a signature, so we cannot check it
-        // this is just here temporarily to ensure a smooth transistion
-        // as soon as a sufficient number of nodes have upgraded, we can remove this try/catch and declare old files as testnet history
-      }   
-      return String(decrypted)
-   
+      const {s: signature, m: message} = JSON.parse(decrypted)    
+      assert(eosjs_ecc_priveos.verify(signature, message, user_key), `Node ${data.node_key}: Invalid signature. Data is not signed by ${user_key}.`)
+      return message
     })
     const combined = secrets.combine(decrypted_shares)
     return Priveos.hex_to_uint8array(combined)
