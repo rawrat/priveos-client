@@ -2127,10 +2127,10 @@ eosjs-api@7.0.4:
     camel-case "^3.0.0"
     isomorphic-fetch "^2.2.1"
 
-eosjs-ecc-priveos@^4.0.7:
-  version "4.0.7"
-  resolved "https://registry.yarnpkg.com/eosjs-ecc-priveos/-/eosjs-ecc-priveos-4.0.7.tgz#54f74d58e3f1321ffd0d1a1046e3e2d60a48c159"
-  integrity sha512-6c766jp3/97/WL1tB56jjOreZvdB3a4INrPlP/w09nbZP8Qhur29CRBvqbnLEV9B0EJWzsPVzgviN6MAbm6k5w==
+eosjs-ecc-priveos@^4.0.8:
+  version "4.0.8"
+  resolved "https://registry.yarnpkg.com/eosjs-ecc-priveos/-/eosjs-ecc-priveos-4.0.8.tgz#d4f56fd49f39cb52ca44835f3c046692913fa375"
+  integrity sha512-mYfcG5spSTEISsBpzrKqN76Tl5vKJrInTUm+AArvCSAHTQtoGxq4/2TgQjVpOkbtuJ/GMzK0olsWxV1YKmOcbQ==
   dependencies:
     bigi "^1.4.2"
     bs58 "^4.0.1"

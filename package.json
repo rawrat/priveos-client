@@ -18,7 +18,7 @@
     "@babel/runtime": "^7.3.1",
     "axios": "^0.18.1",
     "eosjs": "^16.0.6",
-    "eosjs-ecc-priveos": "^4.0.7",
+    "eosjs-ecc-priveos": "^4.0.8",
     "ipfs-unixfs": "^0.1.16",
     "ipld-dag-pb": "^0.15.1",
     "loglevel": "^1.6.1",
