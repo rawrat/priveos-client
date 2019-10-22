@@ -29,6 +29,7 @@ class Priveos {
     if (!config.chainId) throw new Error('No chainId given')
     if (!config.brokerUrl) throw new Error('No brokerUrl given')
     if (!config.httpEndpoint) throw new Error('No httpEndpoint give')
+    if (!config.eos) throw new Error("No eos API instance given")
     
     this.config = config
 
@@ -38,16 +39,35 @@ class Priveos {
       this.threshold_fun = Priveos.default_threshold_fun
     }
     
+    this.eos = this.config.eos
+    this.rpc = this.config.rpc
+    
     if(this.config.auditable) {
-      this.auditable = 1
+      if(this.rpc) {
+        this.auditable = true
+      } else {
+        this.auditable = 1
+      }
     } else {
-      this.auditable = 0
+      if(this.rpc) {
+        this.auditable = false
+      } else {
+        this.auditable = 0
+      }
     }
     
     if(this.config.contractpays) {
-      this.contractpays = 1
+      if(this.rpc) {
+        this.contractpays = true
+      } else {
+        this.contractpays = 1
+      }
     } else {
-      this.contractpays = 0
+      if(this.rpc) {
+        this.contractpays = false
+      } else {
+        this.contractpays = 0
+      }
     }
     
     if(typeof this.config.timeout_seconds == 'undefined') {
@@ -57,18 +77,13 @@ class Priveos {
     // log.setDefaultLevel(this.config.logLevel || 'info')
     log.setLevel(this.config.logLevel || 'info') // required to act according config
 
-    if (this.config.privateKey) {
-      this.eos = Eos({httpEndpoint:this.config.httpEndpoint, chainId: this.config.chainId, keyProvider: [this.config.privateKey]})
-    } else {
-      this.eos = this.config.eos
-    }
+    
     
     
     if(!this.config.priveosContract) {
       this.config.priveosContract = 'priveosrules'
     }
     
-    this.check_chain_id()
   }
 
   /**
@@ -87,13 +102,13 @@ class Priveos {
     options = add_defaults(options)
     
     const nodes = await this.get_active_nodes()
+
     if (nodes.length == 0) {
       const msg = "No nodes available on priveos network."
       log.error(msg)
       throw msg
     }
     log.debug("\r\nNodes: ", nodes)
-
     const number_of_nodes = nodes.length
     const threshold = this.threshold_fun(number_of_nodes)
     log.debug(`Nodes: ${number_of_nodes} Threshold: ${threshold}`)
@@ -206,7 +221,14 @@ class Priveos {
         }
       }
     ])
-    return await this.eos.transaction({actions})
+    if(typeof this.eos.transact !== 'undefined') {
+      return await this.eos.transact({actions}, {
+        blocksBehind: 3,
+        expireSeconds: 30,
+      })
+    } else {
+      return await this.eos.transaction({actions})
+    }
   } 
   
   async accessgrant(user, file, options={}) {
@@ -271,24 +293,48 @@ class Priveos {
         }
       ]
     )
-    const res = await this.eos.transaction({actions})
+    let res
+    if(typeof this.eos.transact !== 'undefined') {
+      res = await this.eos.transact({actions}, {
+        blocksBehind: 3,
+        expireSeconds: 30,
+      })
+    } else {
+      res = await this.eos.transaction({actions})
+    }
     return res.transaction_id
   }
   
   async get_read_fee(token) {
-    const res = await this.eos.getTableRows({json:true, scope: 'priveosrules', code: 'priveosrules',  table: 'readprice', limit:1, lower_bound: token.name})
+    let res
+    if(this.rpc) {
+      res = await this.rpc.get_table_rows({json:true, scope: 'priveosrules', code: 'priveosrules',  table: 'readprice', limit:1, lower_bound: token.name})
+    } else {
+      res = await this.eos.getTableRows({json:true, scope: 'priveosrules', code: 'priveosrules',  table: 'readprice', limit:1, lower_bound: token.name})
+    }
     log.debug('get_priveos_fee: ', res.rows[0].money)
     return new Asset(res.rows[0].money)
   }
   
   async get_store_fee(token) {
-    const res = await this.eos.getTableRows({json:true, scope: 'priveosrules', code: 'priveosrules',  table: 'storeprice', limit:1, lower_bound: token.name})
+    let res
+    if(this.rpc) {
+      res = await this.rpc.get_table_rows({json:true, scope: 'priveosrules', code: 'priveosrules',  table: 'storeprice', limit:1, lower_bound: token.name})
+    } else {
+      res = await this.eos.getTableRows({json:true, scope: 'priveosrules', code: 'priveosrules',  table: 'storeprice', limit:1, lower_bound: token.name})
+    }
+    
     log.debug('get_priveos_fee: ', res.rows[0].money)
     return new Asset(res.rows[0].money)
   }
   
   async get_user_balance(user, token) {
-    const res = await this.eos.getTableRows({json:true, scope: user, code: 'priveosrules',  table: 'balances', limit:1})
+    let res
+    if(this.rpc) {
+      res = await this.rpc.get_table_rows({json:true, scope: user, code: 'priveosrules',  table: 'balances', limit:1})
+    } else {
+      res = await this.eos.getTableRows({json:true, scope: user, code: 'priveosrules',  table: 'balances', limit:1})
+    }
     const bal = res.rows[0]
     if(bal) {
       return new Asset(bal.funds)
@@ -323,7 +369,13 @@ class Priveos {
   }
   
   async get_active_nodes(){
-    const res = await this.eos.getTableRows({json:true, scope: this.config.priveosContract, code: this.config.priveosContract,  table: 'nodes', limit:100})
+    let res 
+    if(this.rpc) {
+      res = await this.rpc.get_table_rows({json:true, scope: this.config.priveosContract, code: this.config.priveosContract,  table: 'nodes', limit:100})
+    } else {
+      res = await this.eos.getTableRows({json:true, scope: this.config.priveosContract, code: this.config.priveosContract,  table: 'nodes', limit:100})
+    }
+    
     return res.rows.filter(x => x.is_active)
   }
   
@@ -344,15 +396,7 @@ class Priveos {
     }
   }
   
-  async check_chain_id() {
-    const info = await this.eos.getInfo({})
-    if(info.chain_id != this.config.chainId) {
-      console.error(`Error: Chain ID is configured to be "${this.config.chainId}" but is "${info.chain_id}"`)
-      if(process && process.exit) {
-        process.exit(1)        
-      }
-    }
-  }
+
 }
 
 // Add some static functions

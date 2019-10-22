@@ -1,4 +1,8 @@
 'use strict'
+const { Api, JsonRpc, RpcError } = require('eosjs')
+const { JsSignatureProvider } = require('eosjs/dist/eosjs-jssig')
+const { TextEncoder, TextDecoder } = require('util')
+const fetch = require('node-fetch')
 
 const assert = require('assert')
 const Priveos = require('./index')
@@ -26,7 +30,15 @@ var file = uuidv4()
 if (process.argv[2]) {
   file = process.argv[2]
 }
-const priveos_alice = new Priveos(config_alice)
+const rpc = new JsonRpc(config.httpEndpoint, { fetch })
+const eos_alice = new Api({ 
+      rpc,
+      signatureProvider: new JsSignatureProvider([config_alice.privateKey]), 
+      textDecoder: new TextDecoder(), 
+      textEncoder: new TextEncoder() 
+    })
+    
+const priveos_alice = new Priveos({...config_alice, ...{eos: eos_alice, rpc}})
 
 async function test() {
   // generate ephemeral key
@@ -41,7 +53,13 @@ async function test() {
       ephemeralKeyPublic: ephemeral_key_public,
     }
   }
-  const priveos_bob = new Priveos(config_bob)
+  const eos_bob = new Api({ 
+        rpc,
+        signatureProvider: new JsSignatureProvider([config_bob.privateKey]), 
+        textDecoder: new TextDecoder(), 
+        textEncoder: new TextEncoder() 
+      })
+  const priveos_bob = new Priveos({...config_bob, ...{eos: eos_bob, rpc}})
 
     // Bob requests access to the file. 
     // This transaction will fail if he is not authorised.

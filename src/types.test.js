@@ -15,6 +15,7 @@ test('Symbol precision', () => {
 test('Symbol name', () => {
   let s = new Symbol("4,EOS")
   expect(s.name).toBe("EOS")
+  expect(s.precision).toBe(4) 
   
   s = new Symbol("1,EOSXXX")
   expect(s.name).toBe("EOSXXX")
@@ -29,6 +30,8 @@ test('Symbol Instantiation by parameters', () => {
 test('Symbol toString()', () => {
   let s = new Symbol("EOS", 4)
   expect(String(s)).toBe("4,EOS")
+  let x = new Symbol("4,EOS")
+  expect(String(x)).toBe("4,EOS")
 })
 
 
